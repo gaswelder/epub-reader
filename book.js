@@ -1,5 +1,6 @@
 const fs = require('fs');
 const zip = require('jszip');
+const path = require('path');
 const promisify = require('util').promisify;
 const xml2js = require('xml2js');
 
@@ -38,6 +39,11 @@ module.exports = class Book {
 	// Returns contents of a chapter.
 	async chapter(href) {
 		const z = await this.zip;
+		const indexPath = await this._indexPath();
+		const dir = path.dirname(indexPath);
+		if (dir != '.') {
+			href = dir + '/' + href;
+		}
 		return z.file(href).async("string");
 	}
 
@@ -62,6 +68,19 @@ module.exports = class Book {
 		if (this.__index) {
 			return this.__index;
 		}
+
+		const z = await this.zip;
+		const contentPath = await this._indexPath();
+		const src = await z.file(contentPath).async("string");
+		const data = await parseXML(src);
+		this.__index = data;
+		return data;
+	}
+
+	async _indexPath() {
+		if (this.__indexPath) {
+			return this.__indexPath;
+		}
 		const z = await this.zip;
 		const container = await z.file("META-INF/container.xml").async("string");
 		const containerData = await parseXML(container)
@@ -70,9 +89,7 @@ module.exports = class Book {
 			throw new Error("Expected 'application/oebps-package+xml, got " + rootFile.$["media-type"]);
 		}
 		const contentPath = rootFile.$["full-path"];
-		const src = await z.file(contentPath).async("string");
-		const data = await parseXML(src);
-		this.__index = data;
-		return data;
+		this.__indexPath = contentPath;
+		return contentPath;
 	}
 }

@@ -13,7 +13,6 @@ main(process.argv[2]);
 async function main(bookPath) {
 	const book = new Book(bookPath);
 	const chapters = await book.chapters();
-	const ch = await book.chapter(chapters[2]);
 
 	// Read all chapters
 	const all = await Promise.all(chapters.map(href => book.chapter(href)));
