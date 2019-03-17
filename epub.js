@@ -16,12 +16,9 @@ async function main(bookPath) {
   const book = new Book(src);
   const chapters = await book.chapters();
 
-  // Read all chapters
-  const all = await Promise.all(chapters.map(href => book.chapter(href)));
-
   // Construct a single list of elements representing the whole content
   var elements = [];
-  for (let xml of all) {
+  for (let xml of chapters) {
     var doc = new xmldoc.XmlDocument(xml);
     elements = elements.concat(doc.childNamed("body").children);
   }
