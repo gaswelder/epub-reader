@@ -3,11 +3,22 @@ const path = require("path");
 const xml2js = require("xml2js");
 const xmldoc = require("xmldoc");
 
-exports.convert = async function convert(src) {
+function Book(zip, data, indexPath) {
+  this.convert = function() {
+    return convert(zip, data, indexPath);
+  };
+}
+
+Book.load = async function(src) {
   const zip = await new JSZip().loadAsync(src);
   const indexPath = await getIndexPath(zip);
   const data = await parseXML(await zip.file(indexPath).async("string"));
+  return new Book(zip, data, indexPath);
+};
 
+exports.Book = Book;
+
+async function convert(zip, data, indexPath) {
   const cpaths = getChapterPaths(data);
   let elements = [];
   for (const chapterPath of cpaths) {
@@ -27,7 +38,7 @@ exports.convert = async function convert(src) {
     toHTML(body) +
     "</html>"
   );
-};
+}
 
 async function processChapter(zip, indexPath, data, chapterPath) {
   const str = await zip.file(zipPath(indexPath, chapterPath)).async("string");
