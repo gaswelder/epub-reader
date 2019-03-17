@@ -80,41 +80,35 @@ function parseXML(str, options = {}) {
 }
 
 async function chapters(zip) {
+  const indexPath = await getIndexPath(zip);
+  const data = await parseXML(await zip.file(indexPath).async("string"));
+
   // Create a map of chapters.
   // read package/manifest
   // 	while read ./item
   // 		read 'id', 'href'
   // 		$parts[id] = href
   const hrefs = {};
-  const data = await index(zip);
   data.package.manifest[0].item.forEach(function(item) {
     var { id, href } = item.$;
     hrefs[id] = href;
   });
 
+  const dir = dirname(indexPath);
+
   const parts = data.package.spine[0].itemref.map(ref => hrefs[ref.$["idref"]]);
-  const all = await Promise.all(parts.map(href => chapter(zip, href)));
+  const all = await Promise.all(
+    parts.map(function(href) {
+      if (dir != ".") {
+        href = dir + "/" + href;
+      }
+      return zip.file(href).async("string");
+    })
+  );
   return all;
 }
 
-// Returns contents of a chapter.
-async function chapter(zip, href) {
-  const path = await indexPath(zip);
-  const dir = dirname(path);
-  if (dir != ".") {
-    href = dir + "/" + href;
-  }
-  return zip.file(href).async("string");
-}
-
-async function index(zip) {
-  const contentPath = await indexPath(zip);
-  const src = await zip.file(contentPath).async("string");
-  const data = await parseXML(src);
-  return data;
-}
-
-async function indexPath(zip) {
+async function getIndexPath(zip) {
   const container = await zip.file("META-INF/container.xml").async("string");
   const containerData = await parseXML(container);
   const rootFile = containerData.container.rootfiles[0].rootfile[0];
@@ -123,5 +117,6 @@ async function indexPath(zip) {
       "Expected 'application/oebps-package+xml, got " + rootFile.$["media-type"]
     );
   }
+
   return rootFile.$["full-path"];
 }
