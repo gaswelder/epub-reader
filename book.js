@@ -1,6 +1,85 @@
 const zip = require("jszip");
 const { dirname } = require("path");
 const xml2js = require("xml2js");
+const xmldoc = require("xmldoc");
+
+class Book {
+  constructor(src) {
+    const z = new zip();
+    this.zip = z.loadAsync(src);
+  }
+
+  async chapters() {
+    return chapters(await this.zip);
+  }
+}
+
+exports.convert = async function convert(src) {
+  const book = new Book(src);
+  const chapters = await book.chapters();
+
+  // Construct a single list of elements representing the whole content
+  var elements = [];
+  for (let xml of chapters) {
+    var doc = new xmldoc.XmlDocument(xml);
+    elements = elements.concat(doc.childNamed("body").children);
+  }
+
+  // Replace image paths
+  var body = {
+    name: "body",
+    attr: {},
+    children: elements
+  };
+  for (let image of findImages(body)) {
+    if (image.attr.src.startsWith("../")) {
+      image.attr.src = image.attr.src.substr("../".length);
+    }
+  }
+
+  return (
+    '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
+    toHTML(body) +
+    "</html>"
+  );
+};
+
+function* findImages(element) {
+  for (let ch of element.children) {
+    if (ch.name == "img") {
+      yield ch;
+      continue;
+    }
+
+    if (ch.children) {
+      yield* findImages(ch);
+    }
+  }
+}
+
+function toHTML(element) {
+  if ("text" in element) {
+    return escape(element.text);
+  }
+
+  const name = element.name;
+  let s = `<${name}`;
+  for (var k in element.attr) {
+    s += ` ${k}="${element.attr[k]}"`;
+  }
+  s += ">";
+  s += element.children.map(toHTML).join("");
+  s += `</${name}>`;
+  return s;
+}
+
+// escape escapes the given plain text string for safe use in HTML code.
+function escape(str) {
+  return str
+    .replace("&", "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
 function parseXML(str, options = {}) {
   return new Promise(function(ok) {
@@ -38,17 +117,6 @@ async function chapter(zip, href) {
   }
   return zip.file(href).async("string");
 }
-
-module.exports = class Book {
-  constructor(src) {
-    const z = new zip();
-    this.zip = z.loadAsync(src);
-  }
-
-  async chapters() {
-    return chapters(await this.zip);
-  }
-};
 
 async function index(zip) {
   const contentPath = await indexPath(zip);
