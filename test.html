@@ -1,0 +1,51 @@
+<html>
+  <head></head>
+  <style>
+    html {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    iframe {
+      flex: 1;
+    }
+  </style>
+  <script src="book.bin.js"></script>
+  <script>
+    function main() {
+      const form = document.querySelector("form");
+      const view = document.querySelector("#main");
+
+      form.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const input = event.target.querySelector("input");
+
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+          const r = await epub.convert(reader.result);
+          view.contentDocument.body.innerHTML = r;
+        };
+        reader.readAsBinaryString(input.files[0]);
+      });
+    }
+  </script>
+  <body>
+    <form>
+      <input type="file" name="file" />
+      <button>Open</button>
+    </form>
+    <iframe id="main"></iframe>
+    <script>
+      main();
+    </script>
+  </body>
+</html>
