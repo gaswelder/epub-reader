@@ -1,26 +1,15 @@
-const zip = require("jszip");
+const JSZip = require("jszip");
 const { dirname } = require("path");
 const xml2js = require("xml2js");
 const xmldoc = require("xmldoc");
 
-class Book {
-  constructor(src) {
-    const z = new zip();
-    this.zip = z.loadAsync(src);
-  }
-
-  async chapters() {
-    return chapters(await this.zip);
-  }
-}
-
 exports.convert = async function convert(src) {
-  const book = new Book(src);
-  const chapters = await book.chapters();
+  const zip = await new JSZip().loadAsync(src);
+  const ch = await chapters(zip);
 
   // Construct a single list of elements representing the whole content
   var elements = [];
-  for (let xml of chapters) {
+  for (let xml of ch) {
     var doc = new xmldoc.XmlDocument(xml);
     elements = elements.concat(doc.childNamed("body").children);
   }
