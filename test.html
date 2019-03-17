@@ -33,6 +33,8 @@
         reader.onload = async function(event) {
           const r = await epub.convert(reader.result);
           view.contentDocument.body.innerHTML = r;
+          view.contentDocument.querySelector("head").innerHTML +=
+            '<link rel="stylesheet" href="book.css">';
         };
         reader.readAsBinaryString(input.files[0]);
       });
