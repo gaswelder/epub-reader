@@ -15,11 +15,15 @@ exports.convert = async function convert(src) {
     const doc = new xmldoc.XmlDocument(str);
 
     for (const image of findImages(doc)) {
-      const href = image.attr.src;
+      let hrefAttr = "src";
+      if (image.name == "image") {
+        hrefAttr = "xlink:href";
+      }
+      const href = image.attr[hrefAttr];
       const imagePath = path.join(path.dirname(chapterPath), href);
       const { type } = getImageItem(data, imagePath);
       const img64 = await zip.file(imagePath).async("base64");
-      image.attr.src = dataURI(img64, type);
+      image.attr[hrefAttr] = dataURI(img64, type);
     }
     elements = elements.concat(doc.childNamed("body").children);
   }
@@ -77,7 +81,7 @@ function getImageItem(data, href) {
 
 function* findImages(element) {
   for (let ch of element.children) {
-    if (ch.name == "img") {
+    if (ch.name == "img" || ch.name == "image") {
       yield ch;
       continue;
     }
