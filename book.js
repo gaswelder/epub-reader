@@ -1,30 +1,34 @@
 const JSZip = require("jszip");
-const { dirname } = require("path");
+const path = require("path");
 const xml2js = require("xml2js");
 const xmldoc = require("xmldoc");
 
 exports.convert = async function convert(src) {
   const zip = await new JSZip().loadAsync(src);
-  const ch = await chapters(zip);
+  const indexPath = await getIndexPath(zip);
+  const data = await parseXML(await zip.file(indexPath).async("string"));
 
-  // Construct a single list of elements representing the whole content
-  var elements = [];
-  for (let xml of ch) {
-    var doc = new xmldoc.XmlDocument(xml);
+  const cpaths = getChapterPaths(data);
+  let elements = [];
+  for (const chapterPath of cpaths) {
+    const str = await zip.file(zipPath(indexPath, chapterPath)).async("string");
+    const doc = new xmldoc.XmlDocument(str);
+
+    for (const image of findImages(doc)) {
+      const href = image.attr.src;
+      const imagePath = path.join(path.dirname(chapterPath), href);
+      const { type } = getImageItem(data, imagePath);
+      const img64 = await zip.file(imagePath).async("base64");
+      image.attr.src = dataURI(img64, type);
+    }
     elements = elements.concat(doc.childNamed("body").children);
   }
 
-  // Replace image paths
-  var body = {
+  const body = {
     name: "body",
     attr: {},
     children: elements
   };
-  for (let image of findImages(body)) {
-    if (image.attr.src.startsWith("../")) {
-      image.attr.src = image.attr.src.substr("../".length);
-    }
-  }
 
   return (
     '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
@@ -32,6 +36,44 @@ exports.convert = async function convert(src) {
     "</html>"
   );
 };
+
+/**
+ * Returns data URI for a file.
+ *
+ * @param {string} data base-64 encoded file contents
+ * @param {string} type MIME type
+ */
+function dataURI(data, type) {
+  return `data:${type};base64,${data}`;
+}
+
+function zipPath(indexPath, href) {
+  const dir = path.dirname(indexPath);
+  if (dir == ".") {
+    return href;
+  }
+  return dir + "/" + href;
+}
+
+function getChapterPaths(data) {
+  const hrefs = {};
+  data.package.manifest[0].item.forEach(function(item) {
+    const { id, href } = item.$;
+    hrefs[id] = href;
+  });
+  return data.package.spine[0].itemref.map(ref => hrefs[ref.$["idref"]]);
+}
+
+function getImageItem(data, href) {
+  const item = data.package.manifest[0].item.find(item => item.$.href == href);
+  if (!item) {
+    throw new Error("couldn't find image " + href);
+  }
+  return {
+    href,
+    type: item.$["media-type"]
+  };
+}
 
 function* findImages(element) {
   for (let ch of element.children) {
@@ -77,35 +119,6 @@ function parseXML(str, options = {}) {
       ok(data);
     });
   });
-}
-
-async function chapters(zip) {
-  const indexPath = await getIndexPath(zip);
-  const data = await parseXML(await zip.file(indexPath).async("string"));
-
-  // Create a map of chapters.
-  // read package/manifest
-  // 	while read ./item
-  // 		read 'id', 'href'
-  // 		$parts[id] = href
-  const hrefs = {};
-  data.package.manifest[0].item.forEach(function(item) {
-    var { id, href } = item.$;
-    hrefs[id] = href;
-  });
-
-  const dir = dirname(indexPath);
-
-  const parts = data.package.spine[0].itemref.map(ref => hrefs[ref.$["idref"]]);
-  const all = await Promise.all(
-    parts.map(function(href) {
-      if (dir != ".") {
-        href = dir + "/" + href;
-      }
-      return zip.file(href).async("string");
-    })
-  );
-  return all;
 }
 
 async function getIndexPath(zip) {
