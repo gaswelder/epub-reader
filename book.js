@@ -11,21 +11,9 @@ exports.convert = async function convert(src) {
   const cpaths = getChapterPaths(data);
   let elements = [];
   for (const chapterPath of cpaths) {
-    const str = await zip.file(zipPath(indexPath, chapterPath)).async("string");
-    const doc = new xmldoc.XmlDocument(str);
-
-    for (const image of findImages(doc)) {
-      let hrefAttr = "src";
-      if (image.name == "image") {
-        hrefAttr = "xlink:href";
-      }
-      const href = image.attr[hrefAttr];
-      const imagePath = path.join(path.dirname(chapterPath), href);
-      const { type } = getImageItem(data, imagePath);
-      const img64 = await zip.file(imagePath).async("base64");
-      image.attr[hrefAttr] = dataURI(img64, type);
-    }
-    elements = elements.concat(doc.childNamed("body").children);
+    elements = elements.concat(
+      await processChapter(zip, indexPath, data, chapterPath)
+    );
   }
 
   const body = {
@@ -40,6 +28,24 @@ exports.convert = async function convert(src) {
     "</html>"
   );
 };
+
+async function processChapter(zip, indexPath, data, chapterPath) {
+  const str = await zip.file(zipPath(indexPath, chapterPath)).async("string");
+  const doc = new xmldoc.XmlDocument(str);
+
+  for (const image of findImages(doc)) {
+    let hrefAttr = "src";
+    if (image.name == "image") {
+      hrefAttr = "xlink:href";
+    }
+    const href = image.attr[hrefAttr];
+    const imagePath = path.join(path.dirname(chapterPath), href);
+    const { type } = getImageItem(data, imagePath);
+    const img64 = await zip.file(imagePath).async("base64");
+    image.attr[hrefAttr] = dataURI(img64, type);
+  }
+  return doc.childNamed("body").children;
+}
 
 /**
  * Returns data URI for a file.
