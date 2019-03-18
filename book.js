@@ -7,6 +7,14 @@ function Book(zip, data, indexPath) {
   this.convert = function() {
     return convert(zip, data, indexPath);
   };
+
+  /**
+   * Returns the book's chapters as an array.
+   */
+  this.chapters = async function() {
+    const cpaths = getChapterPaths(data);
+    return cpaths.map(cpath => new Chapter(zip, data, indexPath, cpath));
+  };
 }
 
 Book.load = async function(src) {
@@ -17,6 +25,26 @@ Book.load = async function(src) {
 };
 
 exports.Book = Book;
+
+function Chapter(zip, data, indexPath, chapterPath) {
+  this.title = function() {
+    return chapterPath;
+  };
+
+  this.render = async function() {
+    const elements = await processChapter(zip, indexPath, data, chapterPath);
+    const body = {
+      name: "body",
+      attr: {},
+      children: elements
+    };
+    return (
+      '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
+      toHTML(body) +
+      "</html>"
+    );
+  };
+}
 
 async function convert(zip, data, indexPath) {
   const cpaths = getChapterPaths(data);

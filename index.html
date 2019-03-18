@@ -19,42 +19,96 @@
       flex: 1;
       border-width: 0;
     }
+
+    #menu {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      background-color: royalblue;
+      width: 6em;
+      height: 6em;
+      border-radius: 6em 0 0 0;
+      transition: all 0.1s;
+    }
+    #menu > div {
+      display: none;
+    }
+    #menu.open {
+      width: 70%;
+      height: 70%;
+      border-radius: 0;
+    }
+    #menu.open > div {
+      display: block;
+    }
   </style>
   <script src="book.bin.js"></script>
   <script>
+    async function renderTOC(book, container) {
+      let s = "<ol>";
+      for (const c of await book.chapters()) {
+        s += `<li>${c.title()}</li>`;
+      }
+      s += "</ol>";
+
+      container.innerHTML = s;
+    }
+
+    async function renderContent(book, view) {
+      const r = await book.convert();
+      view.contentDocument.body.innerHTML = r;
+
+      view.contentDocument.querySelector("head").innerHTML +=
+        '<link rel="stylesheet" href="book.css">';
+
+      view.contentDocument.body.lang = "en";
+      const s = document.createElement("script");
+      s.src = "hyphens.js";
+      view.contentDocument.body.appendChild(s);
+    }
+
     function main() {
       const form = document.querySelector("form");
       const view = document.querySelector("#main");
+      const toc = document.querySelector("#toc");
+      const menu = document.querySelector("#menu");
 
       form.addEventListener("submit", function(event) {
         event.preventDefault();
-
         const input = event.target.querySelector("input");
-
         const reader = new FileReader();
-        reader.onload = async function(event) {
-          const book = await epub.Book.load(reader.result);
-          const r = await book.convert();
-          view.contentDocument.body.innerHTML = r;
-
-          view.contentDocument.querySelector("head").innerHTML +=
-            '<link rel="stylesheet" href="book.css">';
-
-          view.contentDocument.body.lang = "en";
-          const s = document.createElement("script");
-          s.src = "hyphens.js";
-          view.contentDocument.body.appendChild(s);
+        reader.onload = function(event) {
+          load(reader.result);
         };
         reader.readAsBinaryString(input.files[0]);
       });
+
+      menu.addEventListener("click", function(event) {
+        if (event.target != menu) {
+          return;
+        }
+        menu.classList.toggle("open");
+      });
+
+      async function load(result) {
+        const book = await epub.Book.load(result);
+
+        renderTOC(book, toc);
+        renderContent(book, view);
+      }
     }
   </script>
   <body>
-    <form>
-      <input type="file" name="file" />
-      <button>Open</button>
-    </form>
     <iframe id="main"></iframe>
+    <div id="menu">
+      <div>
+        <form>
+          <input type="file" name="file" />
+          <button>Open</button>
+        </form>
+        <div id="toc"></div>
+      </div>
+    </div>
     <script>
       main();
     </script>
