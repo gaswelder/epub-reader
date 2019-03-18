@@ -3,9 +3,46 @@ const path = require("path");
 const xml2js = require("xml2js");
 const xmldoc = require("xmldoc");
 
+/**
+ * NavPoint is a pointer to a chapter in the book.
+ */
+function NavPoint(title, src, children) {
+  /**
+   * Returns the pointer's title.
+   */
+  this.title = function() {
+    return title;
+  };
+
+  /**
+   * Returns the pointer's subsections, also pointers.
+   */
+  this.children = function() {
+    return children;
+  };
+}
+
 function Book(zip, data, indexPath) {
   this.convert = function() {
     return convert(zip, data, indexPath);
+  };
+
+  /**
+   * Returns the books table of contents
+   * as a list of navigation pointer objects.
+   */
+  this.toc = async function() {
+    function parsePoints(root) {
+      return root.map(function(p) {
+        const title = p.navLabel[0].text[0];
+        const src = p.content[0].$.src;
+        const children = p.navPoint ? parsePoints(p.navPoint) : [];
+        return new NavPoint(title, src, children);
+      });
+    }
+
+    const xml = await parseXML(await zip.file("toc.ncx").async("string"));
+    return parsePoints(xml.ncx.navMap[0].navPoint);
   };
 
   /**

@@ -41,16 +41,32 @@
     #menu.open > div {
       display: block;
     }
+    #toc ol {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+    #toc ol ol {
+      margin-left: 1.5em;
+    }
   </style>
   <script src="book.bin.js"></script>
   <script>
-    async function renderTOC(book, container) {
+    function makeTOC(chapters) {
       let s = "<ol>";
-      for (const c of await book.chapters()) {
-        s += `<li>${c.title()}</li>`;
+      for (const c of chapters) {
+        s += "<li>" + c.title();
+        if (c.children().length > 0) {
+          s += makeTOC(c.children());
+        }
+        s += "</li>";
       }
       s += "</ol>";
+      return s;
+    }
 
+    async function renderTOC(book, container) {
+      const s = makeTOC(await book.toc());
       container.innerHTML = s;
     }
 

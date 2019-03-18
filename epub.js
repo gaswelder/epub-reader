@@ -12,6 +12,7 @@ main(process.argv[2]);
 
 async function main(bookPath) {
   const src = await readFile(bookPath);
-  const html = await (await Book.load(src)).convert(src);
+  const book = await Book.load(src);
+  const html = await book.convert(src);
   process.stdout.write(html);
 }
