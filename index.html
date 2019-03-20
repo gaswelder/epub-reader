@@ -24,22 +24,31 @@
       position: fixed;
       right: 0;
       bottom: 0;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    #menu.open {
+      width: 90%;
+      height: 80%;
+      background-color: royalblue;
+    }
+    #menu [data-toggle] {
+      border-radius: 6em 0 0 0;
       background-color: royalblue;
       width: 6em;
       height: 6em;
-      border-radius: 6em 0 0 0;
-      transition: all 0.1s;
+      position: absolute;
+      right: 0;
+      bottom: 0;
     }
-    #menu > div {
+    #menu:not(.open) > div {
       display: none;
     }
-    #menu.open {
-      width: 70%;
-      height: 70%;
-      border-radius: 0;
-    }
-    #menu.open > div {
-      display: block;
+
+    #menu #toc {
+      flex: 1;
+      overflow: scroll;
     }
     #toc ol {
       list-style-type: none;
@@ -99,12 +108,11 @@
         reader.readAsBinaryString(input.files[0]);
       });
 
-      menu.addEventListener("click", function(event) {
-        if (event.target != menu) {
-          return;
-        }
-        menu.classList.toggle("open");
-      });
+      menu
+        .querySelector("[data-toggle]")
+        .addEventListener("click", function(event) {
+          menu.classList.toggle("open");
+        });
 
       async function load(result) {
         const book = await epub.Book.load(result);
@@ -124,6 +132,7 @@
         </form>
         <div id="toc"></div>
       </div>
+      <button data-toggle>Toggle</button>
     </div>
     <script>
       main();
