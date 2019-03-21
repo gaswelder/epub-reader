@@ -113,7 +113,9 @@ async function processChapter(zip, indexPath, data, chapterPath) {
   const str = await zip.file(zipPath(indexPath, chapterPath)).async("string");
   const doc = new xmldoc.XmlDocument(str);
 
-  for (const image of findImages(doc)) {
+  const isImage = ch => ch.name == "img" || ch.name == "image";
+
+  for (const image of find(doc, isImage)) {
     let hrefAttr = "src";
     if (image.name == "image") {
       hrefAttr = "xlink:href";
@@ -165,17 +167,18 @@ function getImageItem(data, href) {
   };
 }
 
-function* findImages(element) {
-  for (let ch of element.children) {
-    if (ch.name == "img" || ch.name == "image") {
-      yield ch;
-      continue;
-    }
+function find(element, match) {
+  const result = [];
 
-    if (ch.children) {
-      yield* findImages(ch);
+  for (const child of element.children) {
+    if (match(child)) {
+      result.push(child);
+    }
+    if (child.children) {
+      result.push(...find(child, match));
     }
   }
+  return result;
 }
 
 function toHTML(element) {

@@ -1,3 +1,4 @@
+const assert = require("assert");
 const fs = require("fs");
 const { Book } = require("./book");
 
@@ -21,7 +22,10 @@ async function main() {
   const src = fs.readFileSync("samples/go.epub");
   const book = await Book.load(src);
 
-  toc(book);
+  // toc(book);
+
+  const html = await book.convert();
+  assert.equal(html.match(/<img /g).length, 767);
 }
 
 main();
