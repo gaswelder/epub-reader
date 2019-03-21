@@ -19,7 +19,7 @@ body {
 }
 
 img {
-  max-width: 17cm;
+  max-width: 100%;
 }
 
 @media (print) {
