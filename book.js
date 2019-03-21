@@ -3,6 +3,10 @@ const path = require("path");
 const xml2js = require("xml2js");
 const xmldoc = require("xmldoc");
 
+function urlHash(url) {
+  return "#" + url.split("#")[1];
+}
+
 /**
  * NavPoint is a pointer to a chapter in the book.
  */
@@ -22,7 +26,7 @@ function NavPoint(title, src, children) {
   };
 
   this.href = function() {
-    return "#" + src.split("#")[1];
+    return urlHash(src);
   };
 }
 
@@ -126,6 +130,11 @@ async function processChapter(zip, indexPath, data, chapterPath) {
     const img64 = await zip.file(imagePath).async("base64");
     image.attr[hrefAttr] = dataURI(img64, type);
   }
+
+  for (const a of find(doc, ch => ch.name == "a")) {
+    a.attr.href = urlHash(a.attr.href);
+  }
+
   return doc.childNamed("body").children;
 }
 
