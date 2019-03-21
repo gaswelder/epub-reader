@@ -64,7 +64,7 @@
     function makeTOC(chapters) {
       let s = "<ol>";
       for (const c of chapters) {
-        s += "<li>" + c.title();
+        s += `<li data-href="${c.href()}">` + c.title();
         if (c.children().length > 0) {
           s += makeTOC(c.children());
         }
@@ -102,6 +102,10 @@
         view.contentDocument.body.appendChild(s);
       }
 
+      function contentJump(href) {
+        containers.text.contentDocument.location.hash = href;
+      }
+
       form.addEventListener("submit", function(event) {
         event.preventDefault();
         const input = event.target.querySelector("input");
@@ -122,7 +126,8 @@
         if (event.target.tagName.toLowerCase() != "li") {
           return;
         }
-        console.log("click");
+        const href = event.target.dataset["href"];
+        contentJump(href);
       });
 
       async function load(result) {

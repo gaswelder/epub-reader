@@ -20,6 +20,10 @@ function NavPoint(title, src, children) {
   this.children = function() {
     return children;
   };
+
+  this.href = function() {
+    return "#" + src.split("#")[1];
+  };
 }
 
 function Book(zip, data, indexPath) {

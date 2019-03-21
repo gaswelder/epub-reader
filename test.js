@@ -5,7 +5,7 @@ async function toc(book) {
   function TOC(toc, indent = "  ") {
     let s = "";
     for (const t of toc) {
-      s += indent + t.title() + "\n";
+      s += indent + t.title() + ` (${t.href()})` + "\n";
       if (t.children().length > 0) {
         s += TOC(t.children(), indent + indent);
       }
