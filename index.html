@@ -74,29 +74,33 @@
       return s;
     }
 
-    async function renderTOC(book, container) {
-      const s = makeTOC(await book.toc());
-      container.innerHTML = s;
-    }
-
-    async function renderContent(book, view) {
-      const r = await book.convert();
-      view.contentDocument.body.innerHTML = r;
-
-      view.contentDocument.querySelector("head").innerHTML +=
-        '<link rel="stylesheet" href="book.css">';
-
-      view.contentDocument.body.lang = "en";
-      const s = document.createElement("script");
-      s.src = "hyphens.js";
-      view.contentDocument.body.appendChild(s);
-    }
-
     function main() {
+      const containers = {
+        toc: document.querySelector("#toc"),
+        text: document.querySelector("#main")
+      };
       const form = document.querySelector("form");
-      const view = document.querySelector("#main");
-      const toc = document.querySelector("#toc");
       const menu = document.querySelector("#menu");
+
+      let book;
+
+      async function renderTOC() {
+        containers.toc.innerHTML = makeTOC(await book.toc());
+      }
+
+      async function renderContent() {
+        const view = containers.text;
+        const r = await book.convert();
+        view.contentDocument.body.innerHTML = r;
+
+        view.contentDocument.querySelector("head").innerHTML +=
+          '<link rel="stylesheet" href="book.css">';
+
+        view.contentDocument.body.lang = "en";
+        const s = document.createElement("script");
+        s.src = "hyphens.js";
+        view.contentDocument.body.appendChild(s);
+      }
 
       form.addEventListener("submit", function(event) {
         event.preventDefault();
@@ -114,11 +118,17 @@
           menu.classList.toggle("open");
         });
 
-      async function load(result) {
-        const book = await epub.Book.load(result);
+      toc.addEventListener("click", function(event) {
+        if (event.target.tagName.toLowerCase() != "li") {
+          return;
+        }
+        console.log("click");
+      });
 
-        renderTOC(book, toc);
-        renderContent(book, view);
+      async function load(result) {
+        book = await epub.Book.load(result);
+        renderTOC();
+        renderContent();
       }
     }
   </script>
