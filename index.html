@@ -138,6 +138,13 @@
         contentJump(href);
       });
 
+      containers.text.addEventListener("dblclick", function(event) {
+        if (event.target.tagName.toLowerCase() !== "img") {
+          return;
+        }
+        window.open(event.target.src);
+      });
+
       enableHyphens(containers.text);
     }
 
