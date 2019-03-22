@@ -1,6 +1,7 @@
 <html>
   <head></head>
   <meta name="viewport" content="width=device-width" />
+  <link rel="stylesheet" href="book.1.css" />
   <style>
     html {
       width: 100%;
@@ -15,7 +16,7 @@
       margin: 0;
       padding: 0;
     }
-    iframe {
+    #main {
       flex: 1;
       border-width: 0;
     }
@@ -57,6 +58,9 @@
     }
     #toc ol ol {
       margin-left: 1.5em;
+    }
+    img {
+      max-height: 100vh;
     }
   </style>
   <script src="book.bin.js"></script>
@@ -107,19 +111,12 @@
         const view = containers.text;
 
         const r = await book.convert();
-        view.contentDocument.body.innerHTML = r;
-
-        view.contentDocument.querySelector("head").innerHTML +=
-          '<link rel="stylesheet" href="book.css">';
-
-        view.contentDocument.body.lang = "en";
-        const s = document.createElement("script");
-        s.src = "hyphens.js";
-        view.contentDocument.body.appendChild(s);
+        view.innerHTML = r;
+        view.lang = "en";
       }
 
       function contentJump(href) {
-        containers.text.contentDocument.location.hash = href;
+        document.location.hash = href;
       }
 
       form.addEventListener("submit", async function(event) {
@@ -140,10 +137,23 @@
         const href = event.target.dataset["href"];
         contentJump(href);
       });
+
+      enableHyphens(containers.text);
+    }
+
+    function enableHyphens(d) {
+      if ("hyphens" in d.style) {
+        d.style.hyphens = "auto";
+        return;
+      }
+      if ("MozHyphens" in d.style) {
+        d.style.MozHyphens = "auto";
+        return;
+      }
     }
   </script>
   <body>
-    <iframe id="main"></iframe>
+    <div id="main"></div>
     <div id="menu">
       <div>
         <form>
