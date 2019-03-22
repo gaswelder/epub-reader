@@ -88,8 +88,24 @@
         containers.toc.innerHTML = makeTOC(await book.toc());
       }
 
+      async function loadBook() {
+        const input = form.querySelector("input");
+        const data = input.files[0];
+        if (!data) {
+          return;
+        }
+        // No need in FileReader, the underlying library takes care of it.
+        book = await epub.Book.load(data);
+
+        renderTOC();
+        renderContent();
+      }
+
+      loadBook();
+
       async function renderContent() {
         const view = containers.text;
+
         const r = await book.convert();
         view.contentDocument.body.innerHTML = r;
 
@@ -106,14 +122,9 @@
         containers.text.contentDocument.location.hash = href;
       }
 
-      form.addEventListener("submit", function(event) {
+      form.addEventListener("submit", async function(event) {
         event.preventDefault();
-        const input = event.target.querySelector("input");
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          load(reader.result);
-        };
-        reader.readAsBinaryString(input.files[0]);
+        loadBook();
       });
 
       menu
@@ -129,12 +140,6 @@
         const href = event.target.dataset["href"];
         contentJump(href);
       });
-
-      async function load(result) {
-        book = await epub.Book.load(result);
-        renderTOC();
-        renderContent();
-      }
     }
   </script>
   <body>
