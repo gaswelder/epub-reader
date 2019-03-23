@@ -1,9 +1,9 @@
-html {
+/* html {
   padding: 0;
   margin: 0;
-}
+} */
 
-body {
+#main {
   background-color: white;
   color: black;
 
@@ -23,7 +23,7 @@ img {
 }
 
 @media (print) {
-  body {
+  #main {
     font-size: 10pt;
     line-height: 16pt;
     width: 40em;
@@ -34,7 +34,7 @@ img {
    * max-width = body width + body h-padding above
    */
 @media (max-width: 22cm) {
-  body {
+  #main {
     padding-right: 0;
     padding-left: 0;
     border-color: white;
@@ -53,7 +53,7 @@ img {
    * max-width = body width + body h-padding below
    */
 @media (max-width: 16cm) {
-  body {
+  #main {
     padding: 0.5cm;
     margin: 0;
     width: auto;
@@ -114,7 +114,7 @@ samp {
   font-family: courier new, monospace;
 }
 
-body {
+#main {
   position: relative;
 }
 
@@ -134,7 +134,7 @@ body {
   }
 }
 
-body.short #title {
+#main.short #title {
   min-height: 10em;
 }
 
@@ -376,7 +376,7 @@ header .info p {
 /*
    * Footnotes
    */
-body {
+#main {
   counter-reset: fnlink fnaside;
 }
 
