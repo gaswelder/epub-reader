@@ -81,9 +81,9 @@
     function main() {
       const containers = {
         toc: document.querySelector("#toc"),
-        text: document.querySelector("#main")
+        text: document.querySelector("#main"),
+        file: document.querySelector("#file")
       };
-      const form = document.querySelector("form");
       const menu = document.querySelector("#menu");
 
       let book;
@@ -93,7 +93,7 @@
       }
 
       async function loadBook() {
-        const input = form.querySelector("input");
+        const input = containers.file;
         const data = input.files[0];
         if (!data) {
           return;
@@ -119,10 +119,7 @@
         document.location.hash = href;
       }
 
-      form.addEventListener("submit", async function(event) {
-        event.preventDefault();
-        loadBook();
-      });
+      containers.file.addEventListener("change", loadBook);
 
       menu
         .querySelector("[data-toggle]")
@@ -163,10 +160,7 @@
     <div id="main"></div>
     <div id="menu">
       <div>
-        <form>
-          <input type="file" name="file" />
-          <button>Open</button>
-        </form>
+        <input type="file" id="file" />
         <div id="toc"></div>
       </div>
       <button data-toggle>Toggle</button>
