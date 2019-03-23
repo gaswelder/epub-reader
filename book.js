@@ -125,6 +125,9 @@ async function convert(zip, data, indexPath) {
     children: elements
   };
 
+  cleanup(body);
+  deonion(body);
+
   return (
     '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
     toHTML(body) +
@@ -250,6 +253,69 @@ function parseXML(str, options = {}) {
       ok(data);
     });
   });
+}
+
+function deonion(root) {
+  if (!root.children) {
+    return;
+  }
+
+  const pairs = ["p > span", "span > span", "div > div"];
+
+  function isOnion(node) {
+    return (
+      node.children &&
+      node.children.length == 1 &&
+      pairs.indexOf(node.name + " > " + node.children[0].name) >= 0
+    );
+  }
+
+  for (const c of root.children) {
+    deonion(c);
+    if (isOnion(c)) {
+      c.children = c.children[0].children;
+    }
+  }
+}
+
+function cleanup(root) {
+  if (!root.children) {
+    return;
+  }
+
+  function isEmpty(node) {
+    const containers = ["em", "div", "p", "span", "b", "i"];
+    if (containers.indexOf(node.name) < 0) {
+      return false;
+    }
+
+    // An empty node.
+    if (node.children.length == 0) {
+      return true;
+    }
+
+    // A node with an empty text inside.
+    if (
+      node.children.length == 1 &&
+      "text" in node.children[0] &&
+      node.children[0].text.trim() == ""
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  const ch = [];
+  for (const c of root.children) {
+    cleanup(c);
+    if (isEmpty(c)) {
+      continue;
+    }
+    ch.push(c);
+  }
+
+  root.children = ch;
 }
 
 async function getIndexPath(zip) {
