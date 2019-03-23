@@ -18,6 +18,11 @@ async function toc(book) {
   console.log(TOC(toc));
 }
 
+async function content(book, imagesNumber) {
+  const html = await book.convert();
+  assert.equal(html.match(/<img /g).length, imagesNumber);
+}
+
 async function main() {
   const samples = [["jeff", 12], ["go", 767], ["math", 126], ["swim", 260]];
 
@@ -26,9 +31,8 @@ async function main() {
     console.log(name);
     const src = fs.readFileSync(`samples/${name}.epub`);
     const book = await Book.load(src);
-    const html = await book.convert();
-    fs.writeFileSync(`t-${name}.html`, html);
-    assert.equal(html.match(/<img /g).length, imagesNumber);
+    await toc(book);
+    await content(book, imagesNumber);
   }
 }
 

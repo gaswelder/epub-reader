@@ -52,7 +52,9 @@ function Book(zip, data, indexPath) {
       });
     }
 
-    const xml = await parseXML(await zip.file("toc.ncx").async("string"));
+    const xml = await parseXML(
+      await zip.file(zipPath(indexPath, "toc.ncx")).async("string")
+    );
     return parsePoints(xml.ncx.navMap[0].navPoint);
   };
 
