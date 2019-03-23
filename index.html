@@ -74,6 +74,10 @@
       font-weight: bold;
       font-family: sans-serif;
     }
+    #toc a {
+      text-decoration: none;
+      color: inherit;
+    }
     img {
       max-height: 100vh;
     }
@@ -83,7 +87,7 @@
     function makeTOC(chapters) {
       let s = "<ol>";
       for (const c of chapters) {
-        s += `<li data-href="${c.href()}">` + c.title();
+        s += `<li><a href="${c.href()}">` + c.title() + "</a>";
         if (c.children().length > 0) {
           s += makeTOC(c.children());
         }
@@ -126,10 +130,6 @@
 
       loadBook();
 
-      function contentJump(href) {
-        document.location.hash = href;
-      }
-
       containers.file.addEventListener("change", function() {
         menu.classList.remove("open");
         loadBook();
@@ -140,14 +140,6 @@
         .addEventListener("click", function(event) {
           menu.classList.toggle("open");
         });
-
-      toc.addEventListener("click", function(event) {
-        if (event.target.tagName.toLowerCase() != "li") {
-          return;
-        }
-        const href = event.target.dataset["href"];
-        contentJump(href);
-      });
 
       containers.text.addEventListener("dblclick", function(event) {
         if (event.target.tagName.toLowerCase() !== "img") {
