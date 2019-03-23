@@ -119,7 +119,7 @@
         // No need in FileReader, the underlying library takes care of it.
         book = await epub.Book.load(data);
 
-        renderTOC();
+        await renderTOC();
         containers.text.lang = "en";
         containers.text.innerHTML = await book.convert();
       }
