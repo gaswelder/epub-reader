@@ -4,6 +4,9 @@ const xml2js = require("xml2js");
 const xmldoc = require("xmldoc");
 
 function urlHash(url) {
+  if (!url) {
+    return "#URL_WAS_MISSING";
+  }
   return "#" + url.split("#")[1];
 }
 
