@@ -130,7 +130,10 @@
         document.location.hash = href;
       }
 
-      containers.file.addEventListener("change", loadBook);
+      containers.file.addEventListener("change", function() {
+        menu.classList.remove("open");
+        loadBook();
+      });
 
       menu
         .querySelector("[data-toggle]")
