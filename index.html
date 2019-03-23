@@ -105,7 +105,21 @@
       };
       const menu = document.querySelector("#menu");
 
+      /**
+       * The book that is currently loaded.
+       */
       let book;
+
+      containers.toc.addEventListener("click", function(event) {
+        // Close the menu when a chapter is selected in the menu.
+        if (event.target.tagName.toLowerCase() == "a") {
+          closeMenu();
+        }
+      });
+
+      function closeMenu() {
+        menu.classList.remove("open");
+      }
 
       async function renderTOC() {
         containers.toc.innerHTML = makeTOC(await book.toc());
@@ -131,7 +145,7 @@
       loadBook();
 
       containers.file.addEventListener("change", function() {
-        menu.classList.remove("open");
+        closeMenu();
         loadBook();
       });
 
