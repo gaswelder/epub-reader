@@ -98,22 +98,18 @@
         if (!data) {
           return;
         }
+
+        containers.text.innerHTML = "Loading " + input.files[0].name;
+
         // No need in FileReader, the underlying library takes care of it.
         book = await epub.Book.load(data);
 
         renderTOC();
-        renderContent();
+        containers.text.lang = "en";
+        containers.text.innerHTML = await book.convert();
       }
 
       loadBook();
-
-      async function renderContent() {
-        const view = containers.text;
-
-        const r = await book.convert();
-        view.innerHTML = r;
-        view.lang = "en";
-      }
 
       function contentJump(href) {
         document.location.hash = href;
