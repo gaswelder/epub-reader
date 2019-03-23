@@ -43,6 +43,20 @@ function Book(zip, data, indexPath) {
    * as a list of navigation pointer objects.
    */
   this.toc = async function() {
+    function ns(data) {
+      if (typeof data != "object") {
+        return data;
+      }
+      return new Proxy(data, {
+        get(t, k) {
+          if (typeof k != "string") {
+            return t[k];
+          }
+          return ns(t[k] || t["ncx:" + k]);
+        }
+      });
+    }
+
     function parsePoints(root) {
       return root.map(function(p) {
         const title = p.navLabel[0].text[0];
@@ -55,7 +69,7 @@ function Book(zip, data, indexPath) {
     const xml = await parseXML(
       await zip.file(zipPath(indexPath, "toc.ncx")).async("string")
     );
-    return parsePoints(xml.ncx.navMap[0].navPoint);
+    return parsePoints(ns(xml.ncx.navMap[0]).navPoint);
   };
 
   /**

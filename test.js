@@ -24,7 +24,13 @@ async function content(book, imagesNumber) {
 }
 
 async function main() {
-  const samples = [["jeff", 12], ["go", 767], ["math", 126], ["swim", 260]];
+  const samples = [
+    ["comp", 28],
+    ["jeff", 12],
+    ["go", 767],
+    ["math", 126],
+    ["swim", 260]
+  ];
 
   for (const sample of samples) {
     const [name, imagesNumber] = sample;
