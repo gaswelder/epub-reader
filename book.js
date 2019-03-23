@@ -130,7 +130,7 @@ async function processChapter(zip, indexPath, data, chapterPath) {
     const href = image.attr[hrefAttr];
     const imagePath = path.join(path.dirname(chapterPath), href);
     const { type } = getImageItem(data, imagePath);
-    const img64 = await zip.file(imagePath).async("base64");
+    const img64 = await zip.file(zipPath(indexPath, imagePath)).async("base64");
     image.attr[hrefAttr] = dataURI(img64, type);
   }
 
@@ -151,6 +151,16 @@ function dataURI(data, type) {
   return `data:${type};base64,${data}`;
 }
 
+/**
+ * Resolves item paths in index to corresponding paths in archive.
+ *
+ * Index path (rootfile, OPF) lists item paths relative to itself,
+ * but it itself can be anywhere in the zip file.
+ *
+ * @param {string} indexPath Archive path of the index (for example, "OEBPS/contents.opf")
+ * @param {string} href Index href of an item (for example, "images/001.jpg")
+ * @returns {string}
+ */
 function zipPath(indexPath, href) {
   const dir = path.dirname(indexPath);
   if (dir == ".") {

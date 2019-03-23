@@ -19,13 +19,17 @@ async function toc(book) {
 }
 
 async function main() {
-  const src = fs.readFileSync("samples/go.epub");
-  const book = await Book.load(src);
+  const samples = [["jeff", 12], ["go", 767], ["math", 126], ["swim", 260]];
 
-  // toc(book);
-
-  const html = await book.convert();
-  assert.equal(html.match(/<img /g).length, 767);
+  for (const sample of samples) {
+    const [name, imagesNumber] = sample;
+    console.log(name);
+    const src = fs.readFileSync(`samples/${name}.epub`);
+    const book = await Book.load(src);
+    const html = await book.convert();
+    fs.writeFileSync(`t-${name}.html`, html);
+    assert.equal(html.match(/<img /g).length, imagesNumber);
+  }
 }
 
 main();
