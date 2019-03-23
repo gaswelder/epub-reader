@@ -19,6 +19,8 @@
     #main {
       flex: 1;
       border-width: 0;
+      hyphens: auto;
+      -webkit-hyphens: auto;
     }
 
     #menu {
@@ -137,19 +139,6 @@
         }
         window.open(event.target.src);
       });
-
-      enableHyphens(containers.text);
-    }
-
-    function enableHyphens(d) {
-      if ("hyphens" in d.style) {
-        d.style.hyphens = "auto";
-        return;
-      }
-      if ("MozHyphens" in d.style) {
-        d.style.MozHyphens = "auto";
-        return;
-      }
     }
   </script>
   <body>
