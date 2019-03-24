@@ -35,12 +35,49 @@ function NavPoint(title, src, children) {
 }
 
 function Book(zip, data, indexPath) {
-  this.convert = function() {
-    return convert(zip, data, indexPath);
+  this.convert = async function() {
+    const hrefs = {};
+    data.package.manifest[0].item.forEach(function(item) {
+      const { id, href } = item.$;
+      hrefs[id] = href;
+    });
+    const cpaths = data.package.spine[0].itemref.map(
+      ref => hrefs[ref.$["idref"]]
+    );
+
+    const elements = [];
+    for (const chapterPath of cpaths) {
+      const str = await zip
+        .file(zipPath(indexPath, chapterPath))
+        .async("string");
+      const doc = new xmldoc.XmlDocument(str);
+
+      await embedImages(doc, chapterPath, indexPath, data, zip);
+
+      for (const a of find(doc, ch => ch.name == "a")) {
+        a.attr.href = urlHash(a.attr.href);
+      }
+
+      elements.push(...doc.childNamed("body").children);
+    }
+
+    const body = {
+      name: "body",
+      attr: {},
+      children: elements
+    };
+
+    filters.apply(body);
+
+    return (
+      '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
+      toHTML(body) +
+      "</html>"
+    );
   };
 
   /**
-   * Returns the books table of contents
+   * Returns the book's table of contents
    * as a list of navigation pointer objects.
    */
   this.toc = async function() {
@@ -72,14 +109,6 @@ function Book(zip, data, indexPath) {
     );
     return parsePoints(ns(xml.ncx.navMap[0]).navPoint);
   };
-
-  /**
-   * Returns the book's chapters as an array.
-   */
-  this.chapters = async function() {
-    const cpaths = getChapterPaths(data);
-    return cpaths.map(cpath => new Chapter(zip, data, indexPath, cpath));
-  };
 }
 
 Book.load = async function(src) {
@@ -90,50 +119,6 @@ Book.load = async function(src) {
 };
 
 exports.Book = Book;
-
-function Chapter(zip, data, indexPath, chapterPath) {
-  this.title = function() {
-    return chapterPath;
-  };
-
-  this.render = async function() {
-    const elements = await processChapter(zip, indexPath, data, chapterPath);
-    const body = {
-      name: "body",
-      attr: {},
-      children: elements
-    };
-    return (
-      '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
-      toHTML(body) +
-      "</html>"
-    );
-  };
-}
-
-async function convert(zip, data, indexPath) {
-  const cpaths = getChapterPaths(data);
-  let elements = [];
-  for (const chapterPath of cpaths) {
-    elements = elements.concat(
-      await processChapter(zip, indexPath, data, chapterPath)
-    );
-  }
-
-  const body = {
-    name: "body",
-    attr: {},
-    children: elements
-  };
-
-  filters.apply(body);
-
-  return (
-    '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
-    toHTML(body) +
-    "</html>"
-  );
-}
 
 async function embedImages(root, chapterPath, indexPath, data, zip) {
   const isImage = ch => ch.name == "img" || ch.name == "image";
@@ -149,19 +134,6 @@ async function embedImages(root, chapterPath, indexPath, data, zip) {
     const img64 = await zip.file(zipPath(indexPath, imagePath)).async("base64");
     image.attr[hrefAttr] = dataURI(img64, type);
   }
-}
-
-async function processChapter(zip, indexPath, data, chapterPath) {
-  const str = await zip.file(zipPath(indexPath, chapterPath)).async("string");
-  const doc = new xmldoc.XmlDocument(str);
-
-  await embedImages(doc, chapterPath, indexPath, data, zip);
-
-  for (const a of find(doc, ch => ch.name == "a")) {
-    a.attr.href = urlHash(a.attr.href);
-  }
-
-  return doc.childNamed("body").children;
 }
 
 /**
@@ -190,15 +162,6 @@ function zipPath(indexPath, href) {
     return href;
   }
   return dir + "/" + href;
-}
-
-function getChapterPaths(data) {
-  const hrefs = {};
-  data.package.manifest[0].item.forEach(function(item) {
-    const { id, href } = item.$;
-    hrefs[id] = href;
-  });
-  return data.package.spine[0].itemref.map(ref => hrefs[ref.$["idref"]]);
 }
 
 function getImageItem(data, href) {
