@@ -2,6 +2,7 @@ const JSZip = require("jszip");
 const path = require("path");
 const xml2js = require("xml2js");
 const xmldoc = require("xmldoc");
+const filters = require("./src/filters");
 
 function urlHash(url) {
   if (!url) {
@@ -125,10 +126,7 @@ async function convert(zip, data, indexPath) {
     children: elements
   };
 
-  trim(body);
-  cleanup(body);
-  deonion(body);
-  figures(body);
+  filters.apply(body);
 
   return (
     '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
@@ -259,113 +257,6 @@ function parseXML(str, options = {}) {
       ok(data);
     });
   });
-}
-
-function trim(root) {
-  const ch = root.children;
-
-  if (!ch || !ch.length) {
-    return;
-  }
-
-  ch.forEach(trim);
-
-  const n = ch.length;
-  const first = ch[0];
-  const last = n > 1 ? ch[n - 1] : null;
-
-  if (first.text && first.text.trim() == "") {
-    ch.shift();
-  }
-
-  if (last && last.text && last.text.trim() == "") {
-    ch.pop();
-  }
-
-  root.children = ch;
-}
-
-function deonion(root) {
-  if (!root.children) {
-    return;
-  }
-
-  const pairs = ["p > span", "span > span", "div > div"];
-
-  for (const c of root.children) {
-    deonion(c);
-    if (pairs.some(path => isOnion(c, path))) {
-      c.children = c.children[0].children;
-    }
-
-    if (isOnion(c, ["div", "p"])) {
-      c.name = c.children[0].name;
-      c.attr = c.children[0].attr;
-      c.children = c.children[0].children;
-    }
-  }
-}
-
-function isOnion(root, path) {
-  if (!root.children) {
-    return false;
-  }
-  return (
-    root.children &&
-    root.children.length == 1 &&
-    root.name == path[0] &&
-    root.children[0].name == path[1]
-  );
-}
-
-function figures(root) {
-  if (!root.children) {
-    return;
-  }
-  root.children.forEach(figures);
-  if (isOnion(root, ["p", "img"])) {
-    root.name = "figure";
-  }
-}
-
-function cleanup(root) {
-  if (!root.children) {
-    return;
-  }
-
-  function isEmpty(node) {
-    const containers = ["em", "div", "p", "span", "b", "i"];
-    if (containers.indexOf(node.name) < 0) {
-      return false;
-    }
-
-    // An empty node.
-    if (node.children.length == 0) {
-      return true;
-    }
-
-    // A node with an empty text inside.
-    if (
-      node.children.length == 1 &&
-      "text" in node.children[0] &&
-      node.children[0].text.trim() == ""
-    ) {
-      return true;
-    }
-
-    return false;
-  }
-
-  const ch = [];
-  for (const c of root.children) {
-    cleanup(c);
-    if (isEmpty(c)) {
-      continue;
-    }
-    ch.push(c);
-  }
-
-  root.children = ch;
 }
 
 async function getIndexPath(zip) {
