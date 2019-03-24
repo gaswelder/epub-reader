@@ -125,71 +125,8 @@ samp {
   position: relative;
 }
 
-/*
-   * Title page, the first one.
-   * H1 + P* + P.date + P.author
-   */
-#title {
-  hyphens: none;
-  -moz-hyphens: none;
-  margin-bottom: 6em;
-}
-
-@media print {
-  #title {
-    page-break-after: always;
-  }
-}
-
-#main.short #title {
-  min-height: 10em;
-}
-
-#title * {
-  text-align: center;
-  text-indent: 0;
-  margin-left: 0;
-}
-
-#title h1 {
-  margin-bottom: 1cm;
-  font-size: 32pt;
-  line-height: 38pt;
-  font-weight: normal;
-}
-
-#title p.author {
-  font-size: 12pt;
-  margin: 1em;
-}
-
 p.cont {
   text-indent: 0;
-}
-
-/*
-   * Annotation is usually a short description of the book before
-   * any other content.
-   */
-#annotation {
-  font-size: 0.9em;
-  margin: 4em;
-}
-
-/*
-   * An author's dedication, usually just a few lines, as a 'P' element.
-   */
-.dedication {
-  margin: 4cm 1cm;
-  text-indent: 0;
-  text-align: center;
-  font-style: italic;
-}
-
-.disclaimer {
-  margin: 4cm 1cm;
-  text-indent: 0;
-  text-align: center;
 }
 
 hr {
@@ -284,77 +221,11 @@ nav.with-pages li {
   position: relative;
 }
 
-blockquote.epigraph {
-  margin-left: 40%;
-  margin-bottom: 2em;
-}
-
-blockquote.article {
-  padding: 0;
-  margin: 0;
-}
-
-blockquote.article h1 {
-  margin-top: 1em;
-}
-
-blockquote.letter {
-  font-style: italic;
-}
-
-blockquote.poem p {
-  text-indent: 0;
-  margin-bottom: 1em;
-}
-
-blockquote.dialogue p {
-  text-indent: 0;
-}
-
-blockquote p.source,
-blockquote p.author {
-  text-align: right;
-  margin-top: 1em;
-  margin-bottom: 0;
-}
-
-blockquote p.author + p.source {
-  text-align: right;
-  margin-top: 0;
-}
-
 aside {
   font-size: 90%;
   margin-left: 1.5em;
   /*border-left: 1em solid #eee; */
   padding-left: 1em;
-}
-
-/*
-   * "mark" is a classifier before a heading. For example, a "chapter N" part.
-   */
-h1 > span.mark {
-  font-size: smaller;
-}
-
-.block {
-  display: inline-block;
-  vertical-align: top;
-}
-
-/*
-   * some metadata like publisher, number of copies, etc.
-   */
-.info {
-  margin: 3em 2em;
-  padding: 0.5em;
-  font-size: smaller;
-  text-align: center;
-}
-
-.info,
-header .info p {
-  text-indent: 0;
 }
 
 /*
