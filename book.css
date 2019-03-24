@@ -22,6 +22,10 @@ img {
   max-width: 100%;
 }
 
+p > img:only-child {
+  margin: 1em 0;
+}
+
 @media (print) {
   #main {
     font-size: 10pt;
@@ -107,7 +111,7 @@ p {
 
 pre {
   margin-left: 0.6cm;
-  line-height: 14pt;
+  line-height: 18pt;
 }
 
 code,
@@ -187,33 +191,10 @@ p.cont {
   text-align: center;
 }
 
-/*
-   * A preface is an introductory chapter, usually by the author.
-   */
-section.preface {
-  /* nothing */
-}
-
 hr {
   margin: 1em auto;
   width: 50%;
   visibility: hidden;
-}
-
-/*
-   * Figures
-   */
-figure {
-  text-align: center;
-  margin: 1em 0;
-}
-
-figure * {
-  text-align: left;
-}
-
-figcaption {
-  font-size: 9pt;
 }
 
 /*
