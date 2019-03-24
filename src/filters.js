@@ -29,7 +29,15 @@ function deonion(root) {
     return;
   }
 
-  const pairs = ["p > span", "span > span", "div > div"];
+  const pairs = [
+    ["p", "span"],
+    ["span", "span"],
+    ["div", "div"],
+    ["h1", "strong"],
+    ["h2", "strong"],
+    ["h3", "strong"],
+    ["h4", "strong"]
+  ];
 
   for (const c of root.children) {
     deonion(c);
