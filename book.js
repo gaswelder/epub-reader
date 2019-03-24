@@ -125,8 +125,10 @@ async function convert(zip, data, indexPath) {
     children: elements
   };
 
+  trim(body);
   cleanup(body);
   deonion(body);
+  figures(body);
 
   return (
     '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
@@ -135,13 +137,10 @@ async function convert(zip, data, indexPath) {
   );
 }
 
-async function processChapter(zip, indexPath, data, chapterPath) {
-  const str = await zip.file(zipPath(indexPath, chapterPath)).async("string");
-  const doc = new xmldoc.XmlDocument(str);
-
+async function embedImages(root, chapterPath, indexPath, data, zip) {
   const isImage = ch => ch.name == "img" || ch.name == "image";
 
-  for (const image of find(doc, isImage)) {
+  for (const image of find(root, isImage)) {
     let hrefAttr = "src";
     if (image.name == "image") {
       hrefAttr = "xlink:href";
@@ -152,6 +151,13 @@ async function processChapter(zip, indexPath, data, chapterPath) {
     const img64 = await zip.file(zipPath(indexPath, imagePath)).async("base64");
     image.attr[hrefAttr] = dataURI(img64, type);
   }
+}
+
+async function processChapter(zip, indexPath, data, chapterPath) {
+  const str = await zip.file(zipPath(indexPath, chapterPath)).async("string");
+  const doc = new xmldoc.XmlDocument(str);
+
+  await embedImages(doc, chapterPath, indexPath, data, zip);
 
   for (const a of find(doc, ch => ch.name == "a")) {
     a.attr.href = urlHash(a.attr.href);
@@ -255,6 +261,30 @@ function parseXML(str, options = {}) {
   });
 }
 
+function trim(root) {
+  const ch = root.children;
+
+  if (!ch || !ch.length) {
+    return;
+  }
+
+  ch.forEach(trim);
+
+  const n = ch.length;
+  const first = ch[0];
+  const last = n > 1 ? ch[n - 1] : null;
+
+  if (first.text && first.text.trim() == "") {
+    ch.shift();
+  }
+
+  if (last && last.text && last.text.trim() == "") {
+    ch.pop();
+  }
+
+  root.children = ch;
+}
+
 function deonion(root) {
   if (!root.children) {
     return;
@@ -262,19 +292,39 @@ function deonion(root) {
 
   const pairs = ["p > span", "span > span", "div > div"];
 
-  function isOnion(node) {
-    return (
-      node.children &&
-      node.children.length == 1 &&
-      pairs.indexOf(node.name + " > " + node.children[0].name) >= 0
-    );
-  }
-
   for (const c of root.children) {
     deonion(c);
-    if (isOnion(c)) {
+    if (pairs.some(path => isOnion(c, path))) {
       c.children = c.children[0].children;
     }
+
+    if (isOnion(c, ["div", "p"])) {
+      c.name = c.children[0].name;
+      c.attr = c.children[0].attr;
+      c.children = c.children[0].children;
+    }
+  }
+}
+
+function isOnion(root, path) {
+  if (!root.children) {
+    return false;
+  }
+  return (
+    root.children &&
+    root.children.length == 1 &&
+    root.name == path[0] &&
+    root.children[0].name == path[1]
+  );
+}
+
+function figures(root) {
+  if (!root.children) {
+    return;
+  }
+  root.children.forEach(figures);
+  if (isOnion(root, ["p", "img"])) {
+    root.name = "figure";
   }
 }
 
