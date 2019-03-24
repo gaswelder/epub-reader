@@ -16,7 +16,7 @@ function figures(root) {
     return;
   }
   root.children.forEach(figures);
-  if (isOnion(root, ["p", "img"])) {
+  if (isOnion(root, ["p", "img"]) || isOnion(root, ["div", "img"])) {
     root.name = "figure";
   }
 }
