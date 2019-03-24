@@ -2,6 +2,7 @@
   <head>
     <meta name="viewport" content="width=device-width" />
     <meta charset="utf-8" />
+    <link rel="manifest" href="manifest.json" />
     <link rel="stylesheet" href="book.css" />
     <style>
       html {
@@ -180,6 +181,9 @@
     </div>
     <script>
       main();
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js");
+      }
     </script>
   </body>
 </html>
