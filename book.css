@@ -111,8 +111,8 @@ p {
 
 pre {
   margin-left: 0.6cm;
-  line-height: 18pt;
-  font-size: 11pt;
+  line-height: 15pt;
+  font-size: 10pt;
 }
 
 code,
@@ -135,15 +135,13 @@ hr {
   visibility: hidden;
 }
 
-/*
-   * Tables
-   */
 table {
   font-size: 9pt;
   border-spacing: 0;
   border-style: solid;
-  border-color: black;
+  border-color: #999;
   border-width: 1px 1px 0px 1px;
+  margin: 1em auto;
 }
 
 table th {
@@ -151,14 +149,14 @@ table th {
   vertical-align: top;
   padding: 0.3em 0.5em;
   border-style: solid;
-  border-color: black;
+  border-color: #999;
   border-width: 0px 0px 1px 0px;
 }
 
 table td {
   padding: 0.3em 0.5em;
   border-style: solid;
-  border-color: black;
+  border-color: #999;
   border-width: 0px 0px 1px 0px;
 }
 
