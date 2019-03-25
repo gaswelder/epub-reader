@@ -1,6 +1,7 @@
 const assert = require("assert");
 const fs = require("fs");
 const { Book } = require("./book");
+const filters = require("./src/filters");
 
 async function toc(book) {
   function TOC(toc, indent = "  ") {
@@ -23,7 +24,41 @@ async function content(book, imagesNumber) {
   assert.equal(html.match(/<img /g).length, imagesNumber);
 }
 
+async function testFilters() {
+  const body = {
+    name: "body",
+    children: [
+      {
+        name: "svg",
+        attr: {
+          height: "100%"
+        },
+        children: [
+          {
+            name: "img",
+            attr: {
+              style: "border: 1px; height: 100%; margin: 1em;"
+            }
+          }
+        ]
+      }
+    ]
+  };
+
+  filters.apply(body);
+
+  assert.equal(
+    body.children[0].children[0].attr.style,
+    "border: 1px; margin: 1em;"
+  );
+
+  assert.equal(body.children[0].name, "svg");
+  assert.equal(body.children[0].attr.height, undefined);
+}
+
 async function main() {
+  testFilters();
+
   const samples = [
     ["comp", 28],
     ["jeff", 12],

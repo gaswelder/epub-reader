@@ -6,6 +6,7 @@ exports.apply = function(root) {
   cleanup(root);
   deonion(root);
   figures(root);
+  fixHeights(root);
 };
 
 /**
@@ -133,4 +134,26 @@ function isOnion(root, path) {
     root.name == path[0] &&
     root.children[0].name == path[1]
   );
+}
+
+/**
+ * Remove height=100% from covers.
+ */
+function fixHeights(root) {
+  if (root.children) {
+    root.children.forEach(fixHeights);
+  }
+
+  if (
+    root.name == "img" &&
+    root.attr.style &&
+    root.attr.style.indexOf("height: 100%") >= 0
+  ) {
+    root.attr.style = root.attr.style.replace(/height: 100%(;\s?)?/, "");
+    return;
+  }
+
+  if (root.name == "svg" && root.attr.height && root.attr.height == "100%") {
+    delete root.attr.height;
+  }
 }
