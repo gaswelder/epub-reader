@@ -137,6 +137,15 @@
           // No need in FileReader, the underlying library takes care of it.
           book = await epub.Book.load(data);
 
+          book.onConvertProgress(function(progress) {
+            containers.text.innerHTML =
+              "Loading " +
+              input.files[0].name +
+              ": " +
+              Math.round(progress * 100) +
+              "%";
+          });
+
           await renderTOC();
           containers.text.lang = "en";
           containers.text.innerHTML = await book.convert();

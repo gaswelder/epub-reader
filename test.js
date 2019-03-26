@@ -59,6 +59,8 @@ async function testFilters() {
 async function main() {
   testFilters();
 
+  await progress("jeff");
+
   const samples = [
     ["comp", 28],
     ["jeff", 12],
@@ -75,6 +77,20 @@ async function main() {
     await toc(book);
     await content(book, imagesNumber);
   }
+}
+
+async function progress(name) {
+  const src = fs.readFileSync(`samples/${name}.epub`);
+  const book = await Book.load(src);
+
+  const states = [];
+  book.onConvertProgress(function(n) {
+    states.push(n);
+  });
+
+  await book.convert();
+  console.log(states);
+  assert.ok(states.length > 1);
 }
 
 main();

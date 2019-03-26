@@ -35,6 +35,17 @@ function NavPoint(title, src, children) {
 }
 
 function Book(zip, data, indexPath) {
+  let onprogress = null;
+
+  this.onConvertProgress = function(func) {
+    onprogress = func;
+  };
+
+  function report(i, n) {
+    if (!onprogress) return;
+    onprogress(i / n);
+  }
+
   this.convert = async function() {
     const hrefs = {};
     data.package.manifest[0].item.forEach(function(item) {
@@ -46,7 +57,9 @@ function Book(zip, data, indexPath) {
     );
 
     const elements = [];
-    for (const chapterPath of cpaths) {
+    const n = cpaths.length;
+    report(0, n);
+    for (const [i, chapterPath] of cpaths.entries()) {
       const str = await zip
         .file(zipPath(indexPath, chapterPath))
         .async("string");
@@ -59,6 +72,7 @@ function Book(zip, data, indexPath) {
       }
 
       elements.push(...doc.childNamed("body").children);
+      report(i + 1, n);
     }
 
     const body = {
