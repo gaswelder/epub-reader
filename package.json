@@ -1,11 +1,12 @@
 {
   "scripts": {
-    "build": "browserify -s epub book.js -o book.bin.js"
+    "build": "browserify -s epub book.js -o book.bin.js && browserify -s hyphenate src/hyphenate.js -o hyphenate.bin.js"
   },
   "devDependencies": {
     "browserify": "^16.2.3",
     "eslint": "^5.15.3",
     "jszip": "^3.1.4",
+    "mocha": "^5.2.0",
     "xml2js": "^0.4.19",
     "xmldoc": "^1.1.0"
   }

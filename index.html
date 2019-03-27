@@ -22,7 +22,6 @@
         flex: 1;
         border-width: 0;
         hyphens: auto;
-        -webkit-hyphens: auto;
       }
 
       #menu {
@@ -83,6 +82,7 @@
       }
     </style>
     <script src="book.bin.js"></script>
+    <script src="hyphenate.bin.js"></script>
     <script>
       function makeTOC(chapters) {
         let s = "<ol>";
@@ -149,6 +149,7 @@
           await renderTOC();
           containers.text.lang = "en";
           containers.text.innerHTML = await book.convert();
+          makeHyphens(containers.text);
         }
 
         loadBook();
@@ -170,6 +171,29 @@
           }
           window.open(event.target.src);
         });
+      }
+
+      function makeHyphens(root) {
+        if (hyphensSupported()) {
+          return;
+        }
+        for (const node of root.querySelectorAll(
+          "p, span, b, strong, em, i, blockquote"
+        )) {
+          for (const ch of node.childNodes) {
+            if (ch.nodeType != 3) {
+              continue;
+            }
+            ch.textContent = hyphenate.hyphenate(ch.textContent);
+          }
+        }
+      }
+
+      function hyphensSupported() {
+        return (
+          navigator.userAgent.indexOf("Firefox") > 0 &&
+          navigator.userAgent.indexOf("Chrome") < 0
+        );
       }
     </script>
   </head>
