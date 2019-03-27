@@ -71,7 +71,18 @@ function Book(zip, data, indexPath) {
         a.attr.href = urlHash(a.attr.href);
       }
 
-      elements.push(...doc.childNamed("body").children);
+      // If the body has an ID (a navigation target), inject an anchor with that ID.
+      const body = doc.childNamed("body");
+      if (body.attr.id) {
+        elements.push({
+          name: "a",
+          attr: {
+            id: body.attr.id
+          },
+          children: []
+        });
+      }
+      elements.push(...body.children);
       report(i + 1, n);
     }
 
