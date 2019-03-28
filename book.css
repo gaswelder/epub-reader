@@ -12,6 +12,7 @@
   padding: 2cm 3cm;
   width: 40em;
   margin: auto;
+  overflow-x: hidden;
 
   font-family: georgia, serif;
   font-size: 12pt;
