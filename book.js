@@ -8,7 +8,8 @@ function urlHash(url) {
   if (!url) {
     return "#URL_WAS_MISSING";
   }
-  return "#" + url.split("#")[1];
+  const hash = url.split("#")[1];
+  return hash ? "#" + hash : "";
 }
 
 /**
@@ -30,8 +31,19 @@ function NavPoint(title, src, children) {
   };
 
   this.href = function() {
-    return urlHash(src);
+    // If the point's href has a hash, assume it's unique and return it.
+    // If the href is without a hash, assume it's a start-of-file reference
+    // and return the corresponding anchor.
+    return urlHash(src) || "#" + chapterAnchorID(src);
   };
+}
+
+/**
+ * Generates an anchor name for a chapter href.
+ * @param {string} src Chapter href, like "text/001.html"
+ */
+function chapterAnchorID(src) {
+  return src.replace(/[^\w]/g, "-");
 }
 
 function Book(zip, data, indexPath) {
@@ -82,6 +94,14 @@ function Book(zip, data, indexPath) {
           children: []
         });
       }
+
+      // Inject an anchor for the start of the file.
+      elements.push({
+        name: "a",
+        attr: { id: chapterAnchorID(chapterPath) },
+        children: []
+      });
+
       elements.push(...body.children);
       report(i + 1, n);
     }
