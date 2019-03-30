@@ -62,6 +62,7 @@ async function main() {
   await progress("jeff");
 
   const samples = [
+    ["nov", 893],
     ["comp", 28],
     ["jeff", 12],
     ["go", 767],

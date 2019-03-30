@@ -239,6 +239,10 @@ function toHTML(element) {
     return escape(element.text);
   }
 
+  if (element.comment) {
+    return "";
+  }
+
   const name = element.name;
   let s = `<${name}`;
   for (var k in element.attr) {
