@@ -3,6 +3,8 @@ const path = require("path");
 const xml2js = require("xml2js");
 const xmldoc = require("xmldoc");
 const filters = require("./src/filters");
+const xml = require("./book/xml");
+const pages = require("./book/pages");
 
 function urlHash(url) {
   if (!url) {
@@ -49,6 +51,15 @@ function chapterAnchorID(src) {
 function Book(zip, data, indexPath) {
   let onprogress = null;
 
+  const hrefs = {};
+  data.package.manifest[0].item.forEach(function(item) {
+    const { id, href } = item.$;
+    hrefs[id] = href;
+  });
+  const cpaths = data.package.spine[0].itemref.map(
+    ref => hrefs[ref.$["idref"]]
+  );
+
   this.onConvertProgress = function(func) {
     onprogress = func;
   };
@@ -58,67 +69,85 @@ function Book(zip, data, indexPath) {
     onprogress(i / n);
   }
 
-  this.convert = async function() {
-    const hrefs = {};
-    data.package.manifest[0].item.forEach(function(item) {
-      const { id, href } = item.$;
-      hrefs[id] = href;
-    });
-    const cpaths = data.package.spine[0].itemref.map(
-      ref => hrefs[ref.$["idref"]]
-    );
-
-    const elements = [];
-    const n = cpaths.length;
-    report(0, n);
-    for (const [i, chapterPath] of cpaths.entries()) {
+  /**
+   * Extracts all chapters.
+   */
+  async function chapters() {
+    const list = [];
+    for (const chapterPath of cpaths) {
       const str = await zip
         .file(zipPath(indexPath, chapterPath))
         .async("string");
-      const doc = new xmldoc.XmlDocument(str);
+      list.push([chapterPath, new xmldoc.XmlDocument(str)]);
+    }
+    return list;
+  }
 
-      await embedImages(doc, chapterPath, indexPath, data, zip);
+  /**
+   * Converts a single chapter.
+   */
+  async function convertChapter(chapterPath, doc) {
+    await embedImages(doc, chapterPath, indexPath, data, zip);
 
-      for (const a of find(doc, ch => ch.name == "a")) {
-        a.attr.href = urlHash(a.attr.href);
-      }
-
-      // If the body has an ID (a navigation target), inject an anchor with that ID.
-      const body = doc.childNamed("body");
-      if (body.attr.id) {
-        elements.push({
-          name: "a",
-          attr: {
-            id: body.attr.id
-          },
-          children: []
-        });
-      }
-
-      // Inject an anchor for the start of the file.
-      elements.push({
-        name: "a",
-        attr: { id: chapterAnchorID(chapterPath) },
-        children: []
-      });
-
-      elements.push(...body.children);
-      report(i + 1, n);
+    for (const a of xml.find(doc, ch => ch.name == "a")) {
+      a.attr.href = urlHash(a.attr.href);
     }
 
-    const body = {
-      name: "body",
-      attr: {},
-      children: elements
-    };
+    const elements = [];
 
+    // If the body has an ID (a navigation target), inject an anchor with that ID.
+    const body = doc.childNamed("body");
+    if (body.attr.id) {
+      elements.push({
+        name: "a",
+        attr: {
+          id: body.attr.id
+        },
+        children: []
+      });
+    }
+
+    // Inject an anchor for the start of the file.
+    elements.push({
+      name: "a",
+      attr: { id: chapterAnchorID(chapterPath) },
+      children: []
+    });
+    elements.push(...body.children);
+    return elements;
+  }
+
+  async function allElements() {
+    const elements = [];
+
+    report(0, 1);
+
+    const chh = await chapters();
+    let i = 0;
+    for (const [chapterPath, doc] of chh) {
+      const chapterElements = await convertChapter(chapterPath, doc);
+      elements.push(...chapterElements);
+      i++;
+      report(i, chh.length);
+    }
+
+    const body = xml.wrap("body", elements);
     filters.apply(body);
+    return body;
+  }
 
+  this.convert = async function() {
+    const body = await allElements();
     return (
       '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
       toHTML(body) +
       "</html>"
     );
+  };
+
+  this.pages = async function() {
+    const body = await allElements();
+    return pages.split(body.children).map(toHTML);
   };
 
   /**
@@ -168,7 +197,7 @@ exports.Book = Book;
 async function embedImages(root, chapterPath, indexPath, data, zip) {
   const isImage = ch => ch.name == "img" || ch.name == "image";
 
-  for (const image of find(root, isImage)) {
+  for (const image of xml.find(root, isImage)) {
     let hrefAttr = "src";
     if (image.name == "image") {
       hrefAttr = "xlink:href";
@@ -218,20 +247,6 @@ function getImageItem(data, href) {
     href,
     type: item.$["media-type"]
   };
-}
-
-function find(element, match) {
-  const result = [];
-
-  for (const child of element.children) {
-    if (match(child)) {
-      result.push(child);
-    }
-    if (child.children) {
-      result.push(...find(child, match));
-    }
-  }
-  return result;
 }
 
 function toHTML(element) {

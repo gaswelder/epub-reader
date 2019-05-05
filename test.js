@@ -78,6 +78,8 @@ async function main() {
     await toc(book);
     await content(book, imagesNumber);
   }
+
+  await pages();
 }
 
 async function progress(name) {
@@ -94,4 +96,12 @@ async function progress(name) {
   assert.ok(states.length > 1);
 }
 
+async function pages() {
+  const src = fs.readFileSync("samples/jeff.epub");
+  const book = await Book.load(src);
+  const pages = await book.pages();
+  console.log(pages);
+}
+
+// pages();
 main();

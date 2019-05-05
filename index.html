@@ -81,6 +81,10 @@
         text-decoration: none;
         color: inherit;
       }
+      .pagenumber {
+        position: absolute;
+        left: 2em;
+      }
     </style>
     <script src="book.bin.js"></script>
     <script src="hyphenate.bin.js"></script>
@@ -126,6 +130,10 @@
           containers.toc.innerHTML = makeTOC(await book.toc());
         }
 
+        function pageHTML(page, number) {
+          return `<div class="pagenumber">${number}</div>` + page;
+        }
+
         async function loadBook() {
           const input = containers.file;
           const data = input.files[0];
@@ -149,7 +157,13 @@
 
           await renderTOC();
           containers.text.lang = "en";
-          containers.text.innerHTML = await book.convert();
+
+          const pages = await book.pages();
+          containers.text.innerHTML = pages
+            .map(function(page, index) {
+              return pageHTML(page, index + 1);
+            })
+            .join("");
           makeHyphens(containers.text);
         }
 

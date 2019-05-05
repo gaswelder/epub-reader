@@ -5,6 +5,7 @@ exports.apply = function(root) {
   trim(root);
   cleanup(root);
   deonion(root);
+  removeDivWrappers(root);
   figures(root);
   fixHeights(root);
 };
@@ -156,4 +157,29 @@ function fixHeights(root) {
   if (root.name == "svg" && root.attr.height && root.attr.height == "100%") {
     delete root.attr.height;
   }
+}
+
+function removeDivWrappers(root) {
+  if (!root.children) {
+    return;
+  }
+  root.children.forEach(removeDivWrappers);
+
+  const newChildren = [];
+  for (const node of root.children) {
+    if (node.name == "div" && node.children.some(ch => ch.name == "p")) {
+      // If the div has id, put an anchor here.
+      if (node.attr.id) {
+        newChildren.push({
+          name: "a",
+          attr: { id: node.attr.id },
+          children: []
+        });
+      }
+      newChildren.push(...node.children);
+    } else {
+      newChildren.push(node);
+    }
+  }
+  root.children = newChildren;
 }
