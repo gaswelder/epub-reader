@@ -14,7 +14,7 @@ async function build(name) {
 async function init(name) {
   const w = writers.dir(name);
   await w.put(
-    "1-titlepage.xhtml",
+    "chapters/01-title.xhtml",
     `<h1>Book Title</h1><img src="images/cover.png" />`
   );
   await w.put("images/cover.png", fs.readFileSync("dummy.png"));
