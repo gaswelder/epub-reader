@@ -68,6 +68,11 @@ async function pack(dir, writer) {
     content: readSource(path)
   }));
 
+  for (const f of files) {
+    if (!isChapter(f)) continue;
+    f.title = chapterTitle(f);
+  }
+
   //   console.log(files);
 
   await writer.put("mimetype", "application/epub+zip");
@@ -102,7 +107,7 @@ function formatChapter(chapter) {
       xml:lang="en-GB"
     >
       <head>
-        <title>${chapterTitle(chapter)}</title>
+        <title>${chapter.title || ""}</title>
         <link href="../css/core.css" rel="stylesheet" type="text/css" />
       </head>
       <body>
@@ -114,7 +119,8 @@ function formatChapter(chapter) {
 
 function chapterTitle(chapter) {
   const re = /<h\d>(.*?)<\/h\d>/;
-  return re.exec(chapter.content)[1];
+  const m = re.exec(chapter.content);
+  return m ? m[1] : null;
 }
 
 function manifest(files) {
@@ -150,9 +156,9 @@ function manifest(files) {
             ${chapters
               .map(
                 c =>
-                  `<reference href="${c.path}" title="${chapterTitle(
-                    c
-                  )}" type="bodymatter"/>`
+                  `<reference href="${c.path}" title="${
+                    c.title
+                  }" type="bodymatter"/>`
               )
               .join("\n")}
         </guide>
@@ -186,6 +192,7 @@ function ncx(files) {
         </docTitle>
         <navMap id="navmap">
             ${chapters
+              .filter(c => c.title)
               .map(
                 (c, i) => `
             <navPoint id="navpoint-${i + 1}" playOrder="${i + 1}">
