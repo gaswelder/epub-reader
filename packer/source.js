@@ -2,9 +2,24 @@ const fs = require("fs");
 
 const isChapter = f => f.type.startsWith("application/xhtml+xml");
 
+function parseMeta(str) {
+  const pairs = str
+    .split(/\r?\n/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+    .map(line => line.split("=").map(s => s.trim()));
+  const meta = {};
+  for (const [k, v] of pairs) {
+    meta[k] = v;
+  }
+  return meta;
+}
+
 exports.read = read;
 function read(dir) {
   const readSource = name => fs.readFileSync(dir + "/" + name);
+
+  const meta = parseMeta(readSource("meta").toString());
 
   const items = ls(dir + "/chapters")
     .concat(ls(dir + "/images"))
@@ -26,7 +41,7 @@ function read(dir) {
     f.title = chapterTitle(f);
   }
 
-  return files;
+  return { meta, files };
 }
 
 function ls(dir) {

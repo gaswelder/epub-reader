@@ -24,7 +24,7 @@ async function pack(dir, writer) {
   const root = "epub/";
   const manifestPath = root + "content.opf";
 
-  const files = source.read(dir);
+  const { meta, files } = source.read(dir);
 
   await writer.put("mimetype", "application/epub+zip");
   await writer.put(
@@ -37,7 +37,7 @@ async function pack(dir, writer) {
     </container>
     `
   );
-  await writer.put(manifestPath, manifest(files));
+  await writer.put(manifestPath, manifest(files, meta));
   await writer.put(root + "toc.ncx", ncx(files));
 
   for (const chapter of files.filter(isChapter)) {
@@ -68,7 +68,7 @@ function formatChapter(chapter) {
     `;
 }
 
-function manifest(files) {
+function manifest(files, meta) {
   const chapters = files.filter(isChapter);
   const cover = files.find(f => f.path.startsWith("images/cover."));
 
@@ -79,8 +79,12 @@ function manifest(files) {
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:opf="http://www.idpf.org/2007/opf"
             xmlns:dcterms="http://purl.org/dc/terms/"
+            xmlns:dc="http://purl.org/dc/elements/1.1/"
             >
             ${cover ? `<meta name="cover" content="${cover.path}" />` : ""}
+            <dc:title>${meta.title}</dc:title>
+            <dc:language>${meta.language}</dc:language>
+            <dc:creator>${meta.author}</dc:creator>
         </metadata>
         <manifest>
             <item href="toc.ncx" id="ncx" media-type="application/x-dtbncx+xml"/>
