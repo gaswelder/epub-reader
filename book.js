@@ -83,6 +83,20 @@ function Book(zip, data, indexPath) {
     return list;
   }
 
+  this.cover = async function() {
+    const meta = data.package.metadata[0].meta.find(m => m.$.name == "cover");
+    if (!meta) return null;
+    const id = meta.$.content;
+    const item = data.package.manifest[0].item.find(i => i.$.id == id);
+    const path = item.$.href;
+    return {
+      type: item.$["media-type"],
+      buffer() {
+        return zip.file(zipPath(indexPath, path)).async("nodebuffer");
+      }
+    };
+  };
+
   /**
    * Converts a single chapter.
    */

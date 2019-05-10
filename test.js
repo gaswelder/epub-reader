@@ -80,6 +80,7 @@ async function main() {
   }
 
   await pages();
+  await covers();
 }
 
 async function progress(name) {
@@ -103,5 +104,10 @@ async function pages() {
   console.log(pages);
 }
 
-// pages();
+async function covers() {
+  const src = fs.readFileSync("samples/jeff.epub");
+  const book = await Book.load(src);
+  assert.equal((await book.cover()).type, "image/jpeg");
+}
+
 main();
