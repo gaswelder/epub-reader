@@ -1,79 +1,30 @@
-const fs = require("fs");
 const writers = require("./writers");
+const source = require("./source");
 
 const isChapter = f => f.type.startsWith("application/xhtml+xml");
 
 // main();
-build("source");
+build("source2");
 async function build(name) {
   const w = writers.zip("_out.zip");
   await pack(name, w);
   w.close();
 }
 
-async function init(name) {
-  const w = writers.dir(name);
-  await w.put(
-    "chapters/01-title.xhtml",
-    `<h1>Book Title</h1><img src="images/cover.png" />`
-  );
-  await w.put("images/cover.png", fs.readFileSync("dummy.png"));
-}
-
-function ls(dir) {
-  const results = [];
-
-  for (const entry of fs.readdirSync(dir)) {
-    const path = dir + "/" + entry;
-    if (fs.statSync(path).isDirectory()) {
-      results.push(...ls(path));
-    } else {
-      results.push(path);
-    }
-  }
-  return results;
-}
-
-function mimeType(path) {
-  const types = [
-    ["jpg", "image/jpeg"],
-    ["jpeg", "image/jpeg"],
-    ["png", "image/png"],
-    ["xhtml", "application/xhtml+xml"]
-  ];
-  for (const [ext, type] of types) {
-    if (path.endsWith("." + ext)) {
-      return type;
-    }
-  }
-  throw new Error("Unknown extension in filename " + path);
-}
+// async function init(name) {
+//   const w = writers.dir(name);
+//   await w.put(
+//     "chapters/01-title.xhtml",
+//     `<h1>Book Title</h1><img src="images/cover.png" />`
+//   );
+//   await w.put("images/cover.png", fs.readFileSync("dummy.png"));
+// }
 
 async function pack(dir, writer) {
   const root = "epub/";
   const manifestPath = root + "content.opf";
 
-  const readSource = name => fs.readFileSync(dir + "/" + name);
-
-  const items = ls(dir).map(f =>
-    f
-      .split("/")
-      .slice(1)
-      .join("/")
-  );
-
-  const files = items.map(path => ({
-    path: path,
-    type: mimeType(path),
-    content: readSource(path)
-  }));
-
-  for (const f of files) {
-    if (!isChapter(f)) continue;
-    f.title = chapterTitle(f);
-  }
-
-  //   console.log(files);
+  const files = source.read(dir);
 
   await writer.put("mimetype", "application/epub+zip");
   await writer.put(
@@ -115,12 +66,6 @@ function formatChapter(chapter) {
       </body>
     </html>
     `;
-}
-
-function chapterTitle(chapter) {
-  const re = /<h\d>(.*?)<\/h\d>/;
-  const m = re.exec(chapter.content);
-  return m ? m[1] : null;
 }
 
 function manifest(files) {
