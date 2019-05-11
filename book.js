@@ -75,10 +75,14 @@ function Book(zip, data, indexPath) {
   async function chapters() {
     const list = [];
     for (const chapterPath of cpaths) {
-      const str = await zip
-        .file(zipPath(indexPath, chapterPath))
-        .async("string");
-      list.push([chapterPath, new xmldoc.XmlDocument(str)]);
+      try {
+        const str = await zip
+          .file(zipPath(indexPath, chapterPath))
+          .async("string");
+        list.push([chapterPath, new xmldoc.XmlDocument(str)]);
+      } catch (e) {
+        throw new Error(chapterPath + ": " + e.toString());
+      }
     }
     return list;
   }
