@@ -37,7 +37,12 @@ http
 
 async function index(req, res) {
   res.setHeader("Content-Type", "text/html");
-  res.write(`<style>
+  res.write(`
+  <!DOCTYPE html>
+  <html>
+  <head>
+  <meta charset="utf-8">
+  <style>
   body {
       display: flex;
       flex-wrap: wrap;
@@ -46,15 +51,19 @@ async function index(req, res) {
       width: 200px;
   }
   img { height: 200px; width: auto; }
-  </style>`);
+  </style>
+  </head>
+  <body>
+  `);
   for (const name of list()) {
     res.write(`<article><img src="/${name}"><br>${name}</article>`);
   }
+  res.write("</body></html>");
   res.end();
 }
 
 async function cover(req, res) {
-  const name = unescape(req.url.substr(1));
+  const name = decodeURIComponent(req.url.substr(1));
   const src = read(name);
   const book = await Book.load(src);
   const c = await book.cover();
