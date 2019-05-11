@@ -24,6 +24,7 @@ http
           await cover(req, res);
       }
     } catch (e) {
+      console.error(e);
       res.setHeader("Content-Type", "text/plain");
       res.writeHead(500);
       res.write("Error: " + e.toString());

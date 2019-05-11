@@ -88,6 +88,7 @@ function Book(zip, data, indexPath) {
   }
 
   this.cover = async function() {
+    if (!data.package.metadata[0].meta) return null;
     const meta = data.package.metadata[0].meta.find(m => m.$.name == "cover");
     if (!meta) return null;
     const id = meta.$.content;

@@ -1,6 +1,7 @@
 const writers = require("./writers");
 const source = require("./source");
 const xmldoc = require("xmldoc");
+const path = require("path");
 
 const [input, output] = process.argv.slice(2);
 
@@ -89,7 +90,7 @@ function formatChapter(chapter) {
 }
 
 function manifest(chapters, images, meta) {
-  const cover = images.find(f => f.path.startsWith("images/cover."));
+  const cover = images.find(f => path.basename(f.path).startsWith("cover."));
   const files = chapters.concat(images);
 
   // reference href="..." title="..." type="title-page text || bodymatter"
