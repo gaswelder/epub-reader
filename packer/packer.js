@@ -1,7 +1,6 @@
 const writers = require("./writers");
 const source = require("./source");
 
-const isChapter = f => f.type.startsWith("application/xhtml+xml");
 
 // main();
 build("source2");
@@ -20,11 +19,24 @@ async function build(name) {
 //   await w.put("images/cover.png", fs.readFileSync("dummy.png"));
 // }
 
+function flatten(chapters) {
+  const list = [];
+
+  for (const c of chapters) {
+    if (Array.isArray(c)) {
+      list.push(...flatten(c));
+    } else {
+      list.push(c);
+    }
+  }
+  return list;
+}
+
 async function pack(dir, writer) {
   const root = "epub/";
   const manifestPath = root + "content.opf";
 
-  const { meta, files } = source.read(dir);
+  const { meta, chapters, images } = source.read(dir);
 
   await writer.put("mimetype", "application/epub+zip");
   await writer.put(
@@ -37,14 +49,13 @@ async function pack(dir, writer) {
     </container>
     `
   );
-  await writer.put(manifestPath, manifest(files, meta));
-  await writer.put(root + "toc.ncx", ncx(files));
-
-  for (const chapter of files.filter(isChapter)) {
+  const flatChapters = flatten(chapters);
+  await writer.put(manifestPath, manifest(flatChapters, images, meta));
+  await writer.put(root + "toc.ncx", ncx(chapters));
+  for (const chapter of flatChapters) {
     await writer.put(root + chapter.path, formatChapter(chapter));
   }
-
-  for (const file of files.filter(f => !isChapter(f))) {
+  for (const file of images) {
     await writer.put(root + file.path, file.content);
   }
 }
@@ -68,9 +79,9 @@ function formatChapter(chapter) {
     `;
 }
 
-function manifest(files, meta) {
-  const chapters = files.filter(isChapter);
-  const cover = files.find(f => f.path.startsWith("images/cover."));
+function manifest(chapters, images, meta) {
+  const cover = images.find(f => f.path.startsWith("images/cover."));
+  const files = chapters.concat(images);
 
   // reference href="..." title="..." type="title-page text || bodymatter"
   return `<?xml version="1.0" encoding="utf-8"?>
@@ -91,31 +102,33 @@ function manifest(files, meta) {
             <item href="css/core.css" id="core.css" media-type="text/css"/>
             ${files
               .map(
-                f =>
-                  `<item href="${f.path}" id="${f.path}" media-type="${
-                    f.type
-                  }"/>`
+                f => `
+            <item href="${f.path}" id="${f.path}" media-type="${f.type}"/>`
               )
-              .join("\n")}
+              .join("")}
         </manifest>
         <spine toc="ncx">
-            ${chapters.map(c => `<itemref idref="${c.path}"/>`).join("\n")}
+            ${chapters
+              .map(
+                c => `
+            <itemref idref="${c.path}"/>`
+              )
+              .join("")}
         </spine>
         <guide>
             ${chapters
               .map(
                 c =>
-                  `<reference href="${c.path}" title="${
-                    c.title
-                  }" type="bodymatter"/>`
+                  `
+            <reference href="${c.path}" title="${c.title}" type="bodymatter"/>`
               )
-              .join("\n")}
+              .join("")}
         </guide>
     </package>
     `;
 }
 
-function ncx(files) {
+function ncx(chapters) {
   /*
     <navPoint id="navpoint-1" playOrder="1">
         <navLabel>
@@ -130,8 +143,6 @@ function ncx(files) {
     </navPoint>
     */
 
-  const chapters = files.filter(isChapter);
-
   return `<?xml version="1.0" encoding="utf-8"?>
     <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="en-US">
         <head>
@@ -140,19 +151,29 @@ function ncx(files) {
             <text>Table of Contents</text>
         </docTitle>
         <navMap id="navmap">
-            ${chapters
-              .filter(c => c.title)
-              .map(
-                (c, i) => `
-            <navPoint id="navpoint-${i + 1}" playOrder="${i + 1}">
-                <navLabel>
-                    <text>${c.title}</text>
-                </navLabel>
-                <content src="${c.path}"/>
-            </navPoint>`
-              )
-              .join("\n")}
+            ${chapters.map(navPoint).join("\n")}
         </navMap>
     </ncx>
     `;
+}
+
+function navPoint(chapter) {
+  if (Array.isArray(chapter)) {
+    // Assume the first subchapter is the title.
+    const [title, ...rest] = chapter;
+    return `<navPoint id="navpoint-${title.path}">
+          <navLabel>
+            <text>${title.title}</text>
+          </navLabel>
+          <content src="${title.path}"/>
+          ${rest.map(navPoint).join("\n")}
+        </navPoint>`;
+  }
+
+  return `<navPoint id="navpoint-${chapter.path}">
+    <navLabel>
+        <text>${chapter.title}</text>
+    </navLabel>
+    <content src="${chapter.path}"/>
+</navPoint>`;
 }

@@ -1,7 +1,5 @@
 const fs = require("fs");
 
-const isChapter = f => f.type.startsWith("application/xhtml+xml");
-
 function parseMeta(str) {
   const pairs = str
     .split(/\r?\n/)
@@ -15,36 +13,56 @@ function parseMeta(str) {
   return meta;
 }
 
+function readPart(dir) {
+  const files = fs.readdirSync(dir);
+
+  return files.map(function(file) {
+    const path = dir + "/" + file;
+    if (fs.statSync(path).isDirectory()) {
+      return readPart(path);
+    } else {
+      return readChapter(path);
+    }
+  });
+}
+
+function localPath(path) {
+  return path
+    .split("/")
+    .slice(1)
+    .join("/");
+}
+
+function readChapter(sourcePath) {
+  const path = localPath(sourcePath);
+  const content = fs.readFileSync(sourcePath);
+  return {
+    path,
+    type: mimeType(path),
+    content: content,
+    title: chapterTitle(content.toString())
+  };
+}
+
 exports.read = read;
 function read(dir) {
-  const readSource = name => fs.readFileSync(dir + "/" + name);
+  const meta = parseMeta(fs.readFileSync(dir + "/meta").toString());
+  const chapters = readPart(dir + "/chapters");
+  const images = ls(dir + "/images").map(function(sourcePath) {
+    return {
+      path: localPath(sourcePath),
+      type: mimeType(sourcePath),
+      content: fs.readFileSync(sourcePath)
+    };
+  });
 
-  const meta = parseMeta(readSource("meta").toString());
-
-  const items = ls(dir + "/chapters")
-    .concat(ls(dir + "/images"))
-    .map(f =>
-      f
-        .split("/")
-        .slice(1)
-        .join("/")
-    );
-
-  const files = items.map(path => ({
-    path: path,
-    type: mimeType(path),
-    content: readSource(path)
-  }));
-
-  for (const f of files) {
-    if (!isChapter(f)) continue;
-    f.title = chapterTitle(f);
-  }
-
-  return { meta, files };
+  return { meta, chapters, images };
 }
 
 function ls(dir) {
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
   const results = [];
 
   for (const entry of fs.readdirSync(dir)) {
@@ -73,8 +91,8 @@ function mimeType(path) {
   throw new Error("Unknown extension in filename " + path);
 }
 
-function chapterTitle(chapter) {
+function chapterTitle(content) {
   const re = /<h\d>(.*?)<\/h\d>/;
-  const m = re.exec(chapter.content);
+  const m = re.exec(content);
   return m ? m[1] : null;
 }
