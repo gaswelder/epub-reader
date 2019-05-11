@@ -2,12 +2,14 @@ const http = require("http");
 const fs = require("fs");
 const { Book } = require("../book");
 
+const EpubDir = process.argv[2] || ".";
+
 function read(name) {
-  return fs.readFileSync("../samples/" + name);
+  return fs.readFileSync(EpubDir + "/" + name);
 }
 
 function list() {
-  const ls = fs.readdirSync("../samples");
+  const ls = fs.readdirSync(EpubDir);
   return ls.filter(f => f.endsWith(".epub"));
 }
 
@@ -28,7 +30,9 @@ http
       res.end();
     }
   })
-  .listen(8080);
+  .listen(8080, () => {
+    console.log(`Listening on :8080, serving from ${EpubDir}`);
+  });
 
 async function index(req, res) {
   res.setHeader("Content-Type", "text/html");

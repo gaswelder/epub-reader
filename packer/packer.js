@@ -2,11 +2,13 @@ const writers = require("./writers");
 const source = require("./source");
 const xmldoc = require("xmldoc");
 
-// main();
-build("source2");
-async function build(name) {
-  const w = writers.zip("_out.zip");
-  await pack(name, w);
+const [input, output] = process.argv.slice(2);
+
+build(input, output);
+async function build(input, output) {
+  console.log({ input, output });
+  const w = writers.zip(output);
+  await pack(input, w);
   w.close();
 }
 

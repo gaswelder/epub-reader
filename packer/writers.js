@@ -29,17 +29,15 @@ function mkdir(p) {
 }
 
 exports.zip = zip;
-function zip() {
+function zip(name) {
   var zip = new JSZip();
   return {
     async put(name, content) {
       zip.file(name, content);
-      //   var img = zip.folder("images");
-      //   img.file("smile.gif", imgData, {base64: true});
     },
     async close() {
       const bin = await zip.generateAsync({ type: "nodebuffer" });
-      return util.promisify(fs.writeFile)("_out.zip", bin);
+      return util.promisify(fs.writeFile)(name, bin);
     }
   };
 }
