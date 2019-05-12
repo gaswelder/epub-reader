@@ -7,7 +7,6 @@ const [input, output] = process.argv.slice(2);
 
 build(input, output);
 async function build(input, output) {
-  console.log({ input, output });
   const w = writers.zip(output);
   await pack(input, w);
   w.close();
@@ -80,13 +79,18 @@ function formatChapter(chapter) {
       </body>
     </html>
     `;
-  // Check that the xml is valid
+
   try {
-    new xmldoc.XmlDocument(xml);
+    validateXML(xml);
   } catch (e) {
     throw new Error(chapter.path + ": " + e.toString());
   }
+
   return xml;
+}
+
+function validateXML(xml) {
+  new xmldoc.XmlDocument(xml);
 }
 
 function manifest(chapters, images, meta) {
@@ -94,7 +98,7 @@ function manifest(chapters, images, meta) {
   const files = chapters.concat(images);
 
   // reference href="..." title="..." type="title-page text || bodymatter"
-  return `<?xml version="1.0" encoding="utf-8"?>
+  const xml = `<?xml version="1.0" encoding="utf-8"?>
     <package xmlns="http://www.idpf.org/2007/opf" dir="ltr" unique-identifier="uid" version="3.0" xml:lang="en-US">
         <metadata
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -130,12 +134,22 @@ function manifest(chapters, images, meta) {
               .map(
                 c =>
                   `
-            <reference href="${c.path}" title="${c.title}" type="bodymatter"/>`
+            <reference href="${c.path}" title="${xmlEscape(
+                    c.title
+                  )}" type="bodymatter"/>`
               )
               .join("")}
         </guide>
     </package>
     `;
+  try {
+    validateXML(xml);
+  } catch (e) {
+    throw new Error(
+      "generated invalid manifest: " + e.toString() + "\n\n" + xml
+    );
+  }
+  return xml;
 }
 
 function ncx(chapters) {
@@ -186,4 +200,16 @@ function navPoint(chapter) {
     </navLabel>
     <content src="${chapter.path}"/>
 </navPoint>`;
+}
+
+function xmlEscape(str) {
+  if (typeof str != "string") {
+    return str;
+  }
+  return str
+    .replace(/'/g, "&apos;")
+    .replace(/"/g, "&quot;")
+    .replace(/>/g, "&gt;")
+    .replace(/</g, "&lt;")
+    .replace(/&/g, "&amp;");
 }

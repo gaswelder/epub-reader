@@ -81,7 +81,9 @@ function mimeType(path) {
     ["jpg", "image/jpeg"],
     ["jpeg", "image/jpeg"],
     ["png", "image/png"],
-    ["xhtml", "application/xhtml+xml"]
+    ["xhtml", "application/xhtml+xml"],
+    // Allow html extension for source files to let viewing them with a browser.
+    ["html", "application/xhtml+xml"]
   ];
   for (const [ext, type] of types) {
     if (path.endsWith("." + ext)) {
