@@ -3,6 +3,12 @@ const fs = require("fs");
 const { Book } = require("./book");
 const filters = require("./src/filters");
 
+// async function bb() {
+//   const book = await Book.load(path);
+
+//   const html = book.chapters().map(filter).join('');
+// }
+
 async function toc(book) {
   function TOC(toc, indent = "  ") {
     let s = "";

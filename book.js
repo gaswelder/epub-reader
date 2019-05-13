@@ -1,12 +1,14 @@
 const JSZip = require("jszip");
-const path = require("path");
 const xml2js = require("xml2js");
 const xmldoc = require("xmldoc");
 const filters = require("./src/filters");
 const xml = require("./book/xml");
 const pages = require("./book/pages");
-const NavPoint = require("./epub/NavPoint");
 const Chapter = require("./epub/Chapter");
+const Manifest = require("./epub/Manifest");
+const ZipNode = require("./epub/ZipNode");
+const toHTML = require("./epub/html");
+const _Book = require("./epub/Book");
 
 function Book(zip, data, indexPath) {
   let onprogress = null;
@@ -19,6 +21,9 @@ function Book(zip, data, indexPath) {
   const cpaths = data.package.spine[0].itemref.map(
     ref => hrefs[ref.$["idref"]]
   );
+
+  const indexNode = new ZipNode(zip, indexPath);
+  const manifest = new Manifest(indexNode, data);
 
   this.onConvertProgress = function(func) {
     onprogress = func;
@@ -36,17 +41,10 @@ function Book(zip, data, indexPath) {
     const list = [];
     for (const chapterPath of cpaths) {
       try {
-        const str = await zip
-          .file(zipPath(indexPath, chapterPath))
-          .async("string");
+        const node = indexNode.locate(chapterPath);
+        const str = await node.data("string");
         list.push(
-          new Chapter(
-            chapterPath,
-            new xmldoc.XmlDocument(str),
-            indexPath,
-            data,
-            zip
-          )
+          new Chapter(chapterPath, new xmldoc.XmlDocument(str), node, manifest)
         );
       } catch (e) {
         throw new Error(chapterPath + ": " + e.toString());
@@ -55,20 +53,10 @@ function Book(zip, data, indexPath) {
     return list;
   }
 
-  this.cover = async function() {
-    if (!data.package.metadata[0].meta) return null;
-    const meta = data.package.metadata[0].meta.find(m => m.$.name == "cover");
-    if (!meta) return null;
-    const id = meta.$.content;
-    const item = data.package.manifest[0].item.find(i => i.$.id == id);
-    const path = item.$.href;
-    return {
-      type: item.$["media-type"],
-      buffer() {
-        return zip.file(zipPath(indexPath, path)).async("nodebuffer");
-      }
-    };
-  };
+  const _book = new _Book(manifest);
+
+  this.toc = _book.toc.bind(_book);
+  this.cover = _book.cover.bind(_book);
 
   async function allElements() {
     const elements = [];
@@ -102,107 +90,11 @@ function Book(zip, data, indexPath) {
     const body = await allElements();
     return pages.split(body.children).map(toHTML);
   };
-
-  /**
-   * Returns the book's table of contents
-   * as a list of navigation pointer objects.
-   */
-  this.toc = async function() {
-    function ns(data) {
-      if (typeof data != "object") {
-        return data;
-      }
-      return new Proxy(data, {
-        get(t, k) {
-          if (typeof k != "string") {
-            return t[k];
-          }
-          return ns(t[k] || t["ncx:" + k]);
-        }
-      });
-    }
-
-    function parsePoints(root) {
-      return root.map(function(p) {
-        const title = p.navLabel[0].text[0];
-        const src = p.content[0].$.src;
-        const children = p.navPoint ? parsePoints(p.navPoint) : [];
-        return new NavPoint(title, src, children);
-      });
-    }
-
-    const xml = await parseXML(
-      await zip.file(zipPath(indexPath, "toc.ncx")).async("string")
-    );
-    return parsePoints(ns(xml.ncx.navMap[0]).navPoint);
-  };
 }
 
 Book.load = async function(src) {
   const zip = await new JSZip().loadAsync(src);
-  const indexPath = await getIndexPath(zip);
-  const data = await parseXML(await zip.file(indexPath).async("string"));
-  return new Book(zip, data, indexPath);
-};
 
-exports.Book = Book;
-
-/**
- * Resolves item paths in index to corresponding paths in archive.
- *
- * Index path (rootfile, OPF) lists item paths relative to itself,
- * but it itself can be anywhere in the zip file.
- *
- * @param {string} indexPath Archive path of the index (for example, "OEBPS/contents.opf")
- * @param {string} href Index href of an item (for example, "images/001.jpg")
- * @returns {string}
- */
-function zipPath(indexPath, href) {
-  const dir = path.dirname(indexPath);
-  if (dir == ".") {
-    return href;
-  }
-  return dir + "/" + href;
-}
-
-function toHTML(element) {
-  if ("text" in element) {
-    return escape(element.text);
-  }
-
-  if (element.comment) {
-    return "";
-  }
-
-  const name = element.name;
-  let s = `<${name}`;
-  for (var k in element.attr) {
-    s += ` ${k}="${element.attr[k]}"`;
-  }
-  s += ">";
-  s += element.children.map(toHTML).join("");
-  s += `</${name}>`;
-  return s;
-}
-
-// escape escapes the given plain text string for safe use in HTML code.
-function escape(str) {
-  return str
-    .replace("&", "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function parseXML(str, options = {}) {
-  return new Promise(function(ok) {
-    xml2js.parseString(str, options, function(err, data) {
-      if (err) throw err;
-      ok(data);
-    });
-  });
-}
-
-async function getIndexPath(zip) {
   const container = await zip.file("META-INF/container.xml").async("string");
   const containerData = await parseXML(container);
   const rootFile = containerData.container.rootfiles[0].rootfile[0];
@@ -212,5 +104,18 @@ async function getIndexPath(zip) {
     );
   }
 
-  return rootFile.$["full-path"];
+  const indexPath = rootFile.$["full-path"];
+  const data = await parseXML(await zip.file(indexPath).async("string"));
+  return new Book(zip, data, indexPath);
+};
+
+exports.Book = Book;
+
+function parseXML(str, options = {}) {
+  return new Promise(function(ok) {
+    xml2js.parseString(str, options, function(err, data) {
+      if (err) throw err;
+      ok(data);
+    });
+  });
 }

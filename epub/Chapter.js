@@ -1,11 +1,29 @@
 const xml = require("../book/xml");
-const path = require("path");
 
 module.exports = Chapter;
 
-function Chapter(path, xmldoc, indexPath, data, zip) {
+const isImage = ch => ch.name == "img" || ch.name == "image";
+
+function Chapter(chapterPath, xmldoc, zipNode, manifest) {
+  this._embedImages = async function() {
+    for (const image of xml.find(xmldoc, isImage)) {
+      let hrefAttr = "src";
+      if (image.name == "image") {
+        hrefAttr = "xlink:href";
+      }
+      const href = image.attr[hrefAttr];
+
+      const imageNode = zipNode.locate(href);
+      const img = manifest.image(imageNode.path());
+      const { type } = img;
+      const img64 = await img.data("base64");
+
+      image.attr[hrefAttr] = dataURI(img64, type);
+    }
+  };
+
   this._convert = async function() {
-    await embedImages(xmldoc, path, indexPath, data, zip);
+    await this._embedImages();
 
     for (const a of xml.find(xmldoc, ch => ch.name == "a")) {
       a.attr.href = urlHash(a.attr.href);
@@ -28,7 +46,7 @@ function Chapter(path, xmldoc, indexPath, data, zip) {
     // Inject an anchor for the start of the file.
     elements.push({
       name: "a",
-      attr: { id: chapterAnchorID(path) },
+      attr: { id: chapterAnchorID(chapterPath) },
       children: []
     });
     elements.push(...body.children);
@@ -52,22 +70,6 @@ function chapterAnchorID(src) {
   return src.replace(/[^\w]/g, "-");
 }
 
-async function embedImages(root, chapterPath, indexPath, data, zip) {
-  const isImage = ch => ch.name == "img" || ch.name == "image";
-
-  for (const image of xml.find(root, isImage)) {
-    let hrefAttr = "src";
-    if (image.name == "image") {
-      hrefAttr = "xlink:href";
-    }
-    const href = image.attr[hrefAttr];
-    const imagePath = path.join(path.dirname(chapterPath), href);
-    const { type } = getImageItem(data, imagePath);
-    const img64 = await zip.file(zipPath(indexPath, imagePath)).async("base64");
-    image.attr[hrefAttr] = dataURI(img64, type);
-  }
-}
-
 /**
  * Returns data URI for a file.
  *
@@ -76,33 +78,4 @@ async function embedImages(root, chapterPath, indexPath, data, zip) {
  */
 function dataURI(data, type) {
   return `data:${type};base64,${data}`;
-}
-
-function getImageItem(data, href) {
-  const item = data.package.manifest[0].item.find(item => item.$.href == href);
-  if (!item) {
-    throw new Error("couldn't find image " + href);
-  }
-  return {
-    href,
-    type: item.$["media-type"]
-  };
-}
-
-/**
- * Resolves item paths in index to corresponding paths in archive.
- *
- * Index path (rootfile, OPF) lists item paths relative to itself,
- * but it itself can be anywhere in the zip file.
- *
- * @param {string} indexPath Archive path of the index (for example, "OEBPS/contents.opf")
- * @param {string} href Index href of an item (for example, "images/001.jpg")
- * @returns {string}
- */
-function zipPath(indexPath, href) {
-  const dir = path.dirname(indexPath);
-  if (dir == ".") {
-    return href;
-  }
-  return dir + "/" + href;
 }
