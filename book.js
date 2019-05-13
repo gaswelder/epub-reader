@@ -5,48 +5,8 @@ const xmldoc = require("xmldoc");
 const filters = require("./src/filters");
 const xml = require("./book/xml");
 const pages = require("./book/pages");
-
-function urlHash(url) {
-  if (!url) {
-    return "#URL_WAS_MISSING";
-  }
-  const hash = url.split("#")[1];
-  return hash ? "#" + hash : "";
-}
-
-/**
- * NavPoint is a pointer to a chapter in the book.
- */
-function NavPoint(title, src, children) {
-  /**
-   * Returns the pointer's title.
-   */
-  this.title = function() {
-    return title;
-  };
-
-  /**
-   * Returns the pointer's subsections, also pointers.
-   */
-  this.children = function() {
-    return children;
-  };
-
-  this.href = function() {
-    // If the point's href has a hash, assume it's unique and return it.
-    // If the href is without a hash, assume it's a start-of-file reference
-    // and return the corresponding anchor.
-    return urlHash(src) || "#" + chapterAnchorID(src);
-  };
-}
-
-/**
- * Generates an anchor name for a chapter href.
- * @param {string} src Chapter href, like "text/001.html"
- */
-function chapterAnchorID(src) {
-  return src.replace(/[^\w]/g, "-");
-}
+const NavPoint = require("./epub/NavPoint");
+const Chapter = require("./epub/Chapter");
 
 function Book(zip, data, indexPath) {
   let onprogress = null;
@@ -79,7 +39,15 @@ function Book(zip, data, indexPath) {
         const str = await zip
           .file(zipPath(indexPath, chapterPath))
           .async("string");
-        list.push([chapterPath, new xmldoc.XmlDocument(str)]);
+        list.push(
+          new Chapter(
+            chapterPath,
+            new xmldoc.XmlDocument(str),
+            indexPath,
+            data,
+            zip
+          )
+        );
       } catch (e) {
         throw new Error(chapterPath + ": " + e.toString());
       }
@@ -102,40 +70,6 @@ function Book(zip, data, indexPath) {
     };
   };
 
-  /**
-   * Converts a single chapter.
-   */
-  async function convertChapter(chapterPath, doc) {
-    await embedImages(doc, chapterPath, indexPath, data, zip);
-
-    for (const a of xml.find(doc, ch => ch.name == "a")) {
-      a.attr.href = urlHash(a.attr.href);
-    }
-
-    const elements = [];
-
-    // If the body has an ID (a navigation target), inject an anchor with that ID.
-    const body = doc.childNamed("body");
-    if (body.attr.id) {
-      elements.push({
-        name: "a",
-        attr: {
-          id: body.attr.id
-        },
-        children: []
-      });
-    }
-
-    // Inject an anchor for the start of the file.
-    elements.push({
-      name: "a",
-      attr: { id: chapterAnchorID(chapterPath) },
-      children: []
-    });
-    elements.push(...body.children);
-    return elements;
-  }
-
   async function allElements() {
     const elements = [];
 
@@ -143,8 +77,8 @@ function Book(zip, data, indexPath) {
 
     const chh = await chapters();
     let i = 0;
-    for (const [chapterPath, doc] of chh) {
-      const chapterElements = await convertChapter(chapterPath, doc);
+    for (const chapter of chh) {
+      const chapterElements = await chapter._convert();
       elements.push(...chapterElements);
       i++;
       report(i, chh.length);
@@ -213,32 +147,6 @@ Book.load = async function(src) {
 
 exports.Book = Book;
 
-async function embedImages(root, chapterPath, indexPath, data, zip) {
-  const isImage = ch => ch.name == "img" || ch.name == "image";
-
-  for (const image of xml.find(root, isImage)) {
-    let hrefAttr = "src";
-    if (image.name == "image") {
-      hrefAttr = "xlink:href";
-    }
-    const href = image.attr[hrefAttr];
-    const imagePath = path.join(path.dirname(chapterPath), href);
-    const { type } = getImageItem(data, imagePath);
-    const img64 = await zip.file(zipPath(indexPath, imagePath)).async("base64");
-    image.attr[hrefAttr] = dataURI(img64, type);
-  }
-}
-
-/**
- * Returns data URI for a file.
- *
- * @param {string} data base-64 encoded file contents
- * @param {string} type MIME type
- */
-function dataURI(data, type) {
-  return `data:${type};base64,${data}`;
-}
-
 /**
  * Resolves item paths in index to corresponding paths in archive.
  *
@@ -255,17 +163,6 @@ function zipPath(indexPath, href) {
     return href;
   }
   return dir + "/" + href;
-}
-
-function getImageItem(data, href) {
-  const item = data.package.manifest[0].item.find(item => item.$.href == href);
-  if (!item) {
-    throw new Error("couldn't find image " + href);
-  }
-  return {
-    href,
-    type: item.$["media-type"]
-  };
 }
 
 function toHTML(element) {
