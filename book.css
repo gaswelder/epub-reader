@@ -22,6 +22,15 @@ img {
   max-width: 100%;
 }
 
+figure {
+  text-align: center;
+}
+
+figcaption {
+  font-size: 90%;
+  margin-top: 1em;
+}
+
 @media (print) {
   #main {
     font-size: 10pt;
@@ -128,9 +137,9 @@ p.cont {
 }
 
 hr {
-  margin: 1em auto;
-  width: 50%;
-  visibility: hidden;
+  margin: 2em auto;
+  width: 5em;
+  border-width: 1px 0 0;
 }
 
 table {
