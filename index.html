@@ -65,7 +65,8 @@
           // No need in FileReader, the underlying library takes care of it.
           book = await epub.Book.load(data);
 
-          book.onConvertProgress(function(progress) {
+          const pager = book.pager();
+          pager.onConvertProgress(function(progress) {
             containers.text.innerHTML =
               "Loading " +
               input.files[0].name +
@@ -77,7 +78,7 @@
           await renderTOC();
           containers.text.lang = "en";
 
-          const pages = await book.pages();
+          const pages = await pager.all();
           containers.text.innerHTML = pages
             .map(function(page, index) {
               return pageHTML(page, index + 1);

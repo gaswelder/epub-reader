@@ -26,7 +26,7 @@ async function toc(book) {
 }
 
 async function content(book, imagesNumber) {
-  const html = await book.convert();
+  const html = (await book.pager().all()).join("");
   assert.equal(html.match(/<img /g).length, imagesNumber);
 }
 
@@ -92,13 +92,14 @@ async function main() {
 async function progress(name) {
   const src = fs.readFileSync(`samples/${name}.epub`);
   const book = await Book.load(src);
+  const pager = book.pager();
 
   const states = [];
-  book.onConvertProgress(function(n) {
+  pager.onConvertProgress(function(n) {
     states.push(n);
   });
 
-  await book.convert();
+  await pager.all();
   console.log(states);
   assert.ok(states.length > 1);
 }
