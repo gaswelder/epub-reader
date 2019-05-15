@@ -5,10 +5,18 @@ function Manifest(node, data) {
     return node.locate(p).path();
   }
 
+  function findItem(condition) {
+    return data.package.manifest[0].item.find(condition);
+  }
+
+  const items = {};
+  data.package.manifest[0].item.forEach(function(item) {
+    const { id } = item.$;
+    items[id] = item;
+  });
+
   this.image = function(path) {
-    const item = data.package.manifest[0].item.find(
-      item => fullpath(item.$.href) == path
-    );
+    const item = findItem(i => fullpath(i.$.href) == path);
     if (!item) {
       throw new Error("couldn't find image " + path);
     }
@@ -25,6 +33,18 @@ function Manifest(node, data) {
   };
 
   this.node = () => node;
+
+  //   this.chapters = function() {
+  //       const refs = data.package.spine[0].itemref;
+  //       const items = refs.map(function(ref) {
+  //         const id = ref.$.idref;
+  //         const item = findItem(i => i.id == id);
+  //         const chapter = new Chapter()
+  //       });
+
+  //       node.locate()
+
+  //   };
 }
 
 function Image(manifestItem, zipNode) {

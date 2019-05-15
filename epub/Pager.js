@@ -1,5 +1,4 @@
 const toHTML = require("./html");
-const filters = require("../src/filters");
 const pages = require("../book/pages");
 const xml = require("../book/xml");
 
@@ -37,7 +36,6 @@ function Pager(book) {
     }
 
     const body = xml.wrap("body", elements);
-    filters.apply(body);
     return body;
   }
 }

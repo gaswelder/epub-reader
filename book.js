@@ -1,13 +1,12 @@
 const JSZip = require("jszip");
 const xml2js = require("xml2js");
-const xmldoc = require("xmldoc");
 const Chapter = require("./epub/Chapter");
 const Manifest = require("./epub/Manifest");
 const ZipNode = require("./epub/ZipNode");
 const _Book = require("./epub/Book");
 const Pager = require("./epub/Pager");
 
-function Book(zip, data, indexPath) {
+function Book(zip, data, indexPath, filter) {
   const hrefs = {};
   data.package.manifest[0].item.forEach(function(item) {
     const { id, href } = item.$;
@@ -32,10 +31,7 @@ function Book(zip, data, indexPath) {
     for (const chapterPath of cpaths) {
       try {
         const node = indexNode.locate(chapterPath);
-        const str = await node.data("string");
-        list.push(
-          new Chapter(chapterPath, new xmldoc.XmlDocument(str), node, manifest)
-        );
+        list.push(new Chapter(node, manifest, filter));
       } catch (e) {
         throw new Error(chapterPath + ": " + e.toString());
       }
@@ -48,7 +44,7 @@ function Book(zip, data, indexPath) {
   };
 }
 
-Book.load = async function(src) {
+Book.load = async function(src, filter) {
   const zip = await new JSZip().loadAsync(src);
 
   const container = await zip.file("META-INF/container.xml").async("string");
@@ -62,7 +58,7 @@ Book.load = async function(src) {
 
   const indexPath = rootFile.$["full-path"];
   const data = await parseXML(await zip.file(indexPath).async("string"));
-  return new Book(zip, data, indexPath);
+  return new Book(zip, data, indexPath, filter);
 };
 
 exports.Book = Book;

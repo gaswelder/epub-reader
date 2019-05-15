@@ -27,7 +27,7 @@ function measure(e) {
   ];
 
   if (!textContainers.includes(e.name.toLowerCase())) {
-    console.warn("skipping " + e.name);
+    // console.warn("skipping " + e.name);
     return 1;
   }
   const text = xml

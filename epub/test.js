@@ -1,7 +1,6 @@
 const assert = require("assert");
 const fs = require("fs");
-const { Book } = require("./book");
-const filters = require("./src/filters");
+const { Book } = require("../book");
 
 const files = new Map();
 function readfile(name) {
@@ -51,6 +50,19 @@ describe("epub", function() {
     await pager.all();
     assert.ok(progressValues.length > 1);
   });
+
+  it("allows custom filters", async function() {
+    let called = 0;
+    function filter(tree) {
+      called++;
+      assert.equal(tree.name, "body");
+      assert.ok(tree.children.length > 0);
+    }
+    const src = fs.readFileSync(`samples/jeff.epub`);
+    const book = await Book.load(src, filter);
+    await book.pager().all();
+    assert.ok(called > 0);
+  });
 });
 
 describe("toc", function() {
@@ -74,37 +86,5 @@ describe("toc", function() {
     const src = readfile("jeff");
     const book = await Book.load(src);
     return toc(book);
-  });
-
-  it("filters", function() {
-    const body = {
-      name: "body",
-      children: [
-        {
-          name: "svg",
-          attr: {
-            height: "100%"
-          },
-          children: [
-            {
-              name: "img",
-              attr: {
-                style: "border: 1px; height: 100%; margin: 1em;"
-              }
-            }
-          ]
-        }
-      ]
-    };
-
-    filters.apply(body);
-
-    assert.equal(
-      body.children[0].children[0].attr.style,
-      "border: 1px; margin: 1em;"
-    );
-
-    assert.equal(body.children[0].name, "svg");
-    assert.equal(body.children[0].attr.height, undefined);
   });
 });

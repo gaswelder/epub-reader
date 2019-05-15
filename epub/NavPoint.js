@@ -22,7 +22,7 @@ function NavPoint(title, src, children) {
     // If the point's href has a hash, assume it's unique and return it.
     // If the href is without a hash, assume it's a start-of-file reference
     // and return the corresponding anchor.
-    return urlHash(src) || "#" + chapterAnchorID(src);
+    return urlHash(src);
   };
 }
 
