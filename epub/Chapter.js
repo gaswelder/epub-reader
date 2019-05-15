@@ -1,4 +1,4 @@
-const xml = require("../book/xml");
+const xml = require("./xml");
 const xmldoc = require("xmldoc");
 
 module.exports = Chapter;

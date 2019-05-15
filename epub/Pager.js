@@ -1,6 +1,6 @@
 const toHTML = require("./html");
-const pages = require("../book/pages");
-const xml = require("../book/xml");
+const pages = require("./pages");
+const xml = require("./xml");
 
 module.exports = Pager;
 
