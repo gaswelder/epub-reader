@@ -1,21 +1,11 @@
 const JSZip = require("jszip");
 const xml2js = require("xml2js");
-const Chapter = require("./epub/Chapter");
 const Manifest = require("./epub/Manifest");
 const ZipNode = require("./epub/ZipNode");
 const _Book = require("./epub/Book");
 const Pager = require("./epub/Pager");
 
 function Book(zip, data, indexPath, filter) {
-  const hrefs = {};
-  data.package.manifest[0].item.forEach(function(item) {
-    const { id, href } = item.$;
-    hrefs[id] = href;
-  });
-  const cpaths = data.package.spine[0].itemref.map(
-    ref => hrefs[ref.$["idref"]]
-  );
-
   const indexNode = new ZipNode(zip, indexPath);
   const manifest = new Manifest(indexNode, data);
 
@@ -23,20 +13,8 @@ function Book(zip, data, indexPath, filter) {
   this.toc = _book.toc.bind(_book);
   this.cover = _book.cover.bind(_book);
 
-  /**
-   * Extracts all chapters.
-   */
-  this._chapters = async function() {
-    const list = [];
-    for (const chapterPath of cpaths) {
-      try {
-        const node = indexNode.locate(chapterPath);
-        list.push(new Chapter(node, manifest, filter));
-      } catch (e) {
-        throw new Error(chapterPath + ": " + e.toString());
-      }
-    }
-    return list;
+  this._chapters = function() {
+    return manifest.chapters(filter);
   };
 
   this.pager = function() {

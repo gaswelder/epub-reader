@@ -1,5 +1,7 @@
 module.exports = Manifest;
 
+const Chapter = require("./Chapter");
+
 function Manifest(node, data) {
   function fullpath(p) {
     return node.locate(p).path();
@@ -32,19 +34,18 @@ function Manifest(node, data) {
     return new Image(item, node.locate(item.$.href));
   };
 
+  const _this = this;
+
   this.node = () => node;
 
-  //   this.chapters = function() {
-  //       const refs = data.package.spine[0].itemref;
-  //       const items = refs.map(function(ref) {
-  //         const id = ref.$.idref;
-  //         const item = findItem(i => i.id == id);
-  //         const chapter = new Chapter()
-  //       });
-
-  //       node.locate()
-
-  //   };
+  this.chapters = function(filter) {
+    const refs = data.package.spine[0].itemref;
+    return refs.map(function(ref) {
+      const id = ref.$.idref;
+      const item = findItem(i => i.$.id == id);
+      return new Chapter(node.locate(item.$.href), _this, filter);
+    });
+  };
 }
 
 function Image(manifestItem, zipNode) {
