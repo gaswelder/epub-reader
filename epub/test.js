@@ -1,6 +1,6 @@
 const assert = require("assert");
 const fs = require("fs");
-const { Book } = require("../book");
+const Book = require("./Book.js");
 
 const files = new Map();
 function readfile(name) {

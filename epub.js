@@ -1,7 +1,7 @@
 const fs = require("fs");
 const promisify = require("util").promisify;
 const readFile = promisify(fs.readFile);
-const { Book } = require("./book");
+const Book = require("./epub");
 
 if (process.argv.length != 3) {
   process.stderr.write("Usage: node script {filename}\n");

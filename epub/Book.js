@@ -1,9 +1,13 @@
-module.exports = Book;
-
+const JSZip = require("jszip");
 const NavPoint = require("./NavPoint");
 const xml2js = require("xml2js");
+const Manifest = require("./Manifest");
+const ZipNode = require("./ZipNode");
+const Pager = require("./Pager");
 
-function Book(manifest) {
+module.exports = Book;
+
+function Book(manifest, filter) {
   this.cover = function() {
     return manifest.cover();
   };
@@ -44,7 +48,35 @@ function Book(manifest) {
     );
     return parsePoints(ns(xml.ncx.navMap[0]).navPoint);
   };
+
+  this._chapters = function() {
+    return manifest.chapters(filter);
+  };
+
+  this.pager = function() {
+    return new Pager(this);
+  };
 }
+
+Book.load = async function(src, filter) {
+  const zip = await new JSZip().loadAsync(src);
+
+  const container = await zip.file("META-INF/container.xml").async("string");
+  const containerData = await parseXML(container);
+  const rootFile = containerData.container.rootfiles[0].rootfile[0];
+  if (rootFile.$["media-type"] != "application/oebps-package+xml") {
+    throw new Error(
+      "Expected 'application/oebps-package+xml, got " + rootFile.$["media-type"]
+    );
+  }
+
+  const indexPath = rootFile.$["full-path"];
+  const data = await parseXML(await zip.file(indexPath).async("string"));
+  const indexNode = new ZipNode(zip, indexPath);
+  const manifest = new Manifest(indexNode, data);
+
+  return new Book(manifest, filter);
+};
 
 function parseXML(str, options = {}) {
   return new Promise(function(ok) {

@@ -64,7 +64,7 @@
           containers.text.innerHTML = "Loading " + input.files[0].name;
 
           // No need in FileReader, the underlying library takes care of it.
-          book = await epub.Book.load(data, filters.apply);
+          book = await epub.load(data, filters.apply);
 
           const pager = book.pager();
           pager.onConvertProgress(function(progress) {
