@@ -63,6 +63,13 @@ describe("epub", function() {
     await book.pager().all();
     assert.ok(called > 0);
   });
+
+  it("returns the stylesheet", async function() {
+    const src = fs.readFileSync(`samples/jeff.epub`);
+    const book = await Book.load(src);
+    const css = await book.stylesheet();
+    assert.ok(css.length > 0);
+  });
 });
 
 describe("toc", function() {

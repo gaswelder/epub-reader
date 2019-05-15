@@ -79,11 +79,14 @@
           containers.text.lang = "en";
 
           const pages = await pager.all();
-          containers.text.innerHTML = pages
-            .map(function(page, index) {
-              return pageHTML(page, index + 1);
-            })
-            .join("");
+          const css = await book.stylesheet();
+          containers.text.innerHTML =
+            `<style>${css}</style>` +
+            pages
+              .map(function(page, index) {
+                return pageHTML(page, index + 1);
+              })
+              .join("");
           makeHyphens(containers.text);
         }
 

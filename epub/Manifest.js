@@ -46,6 +46,12 @@ function Manifest(node, data) {
       return new Chapter(node.locate(item.$.href), _this, filter);
     });
   };
+
+  this.stylesheets = function() {
+    return data.package.manifest[0].item
+      .filter(i => i.$["media-type"] == "text/css")
+      .map(i => node.locate(i.$.href));
+  };
 }
 
 function Image(manifestItem, zipNode) {

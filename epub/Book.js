@@ -56,6 +56,16 @@ function Book(manifest, filter) {
   this.pager = function() {
     return new Pager(this);
   };
+
+  this.stylesheet = async function() {
+    const nodes = manifest.stylesheets();
+    let css = "";
+    for (const node of nodes) {
+      css += await node.data("string");
+      css += "\n";
+    }
+    return css;
+  };
 }
 
 Book.load = async function(src, filter) {
