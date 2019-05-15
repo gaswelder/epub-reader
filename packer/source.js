@@ -29,7 +29,7 @@ function readPart(dir) {
 function localPath(path) {
   return path
     .split("/")
-    .slice(1)
+    .slice(2)
     .join("/");
 }
 

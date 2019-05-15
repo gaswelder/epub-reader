@@ -51,6 +51,7 @@ async function pack(dir, writer) {
     </container>
     `
   );
+  await writer.put("epub/styles.css", ".benice { color: pink }");
   const flatChapters = flatten(chapters);
   await writer.put(manifestPath, manifest(flatChapters, images, meta));
   await writer.put(root + "toc.ncx", ncx(chapters));
@@ -72,7 +73,7 @@ function formatChapter(chapter) {
     >
       <head>
         <title>${chapter.title || ""}</title>
-        <link href="../css/core.css" rel="stylesheet" type="text/css" />
+        <link href="../styles.css" rel="stylesheet" type="text/css" />
       </head>
       <body>
       ${chapter.content}
@@ -113,7 +114,7 @@ function manifest(chapters, images, meta) {
         </metadata>
         <manifest>
             <item href="toc.ncx" id="ncx" media-type="application/x-dtbncx+xml"/>
-            <item href="css/core.css" id="core.css" media-type="text/css"/>
+            <item href="styles.css" id="styles.css" media-type="text/css"/>
             ${files
               .map(
                 f => `
