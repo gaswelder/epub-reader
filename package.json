@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "build": "browserify -s epub epub/index.js -o book.bin.js && browserify -s hyphenate src/hyphenate.js -o hyphenate.bin.js && browserify -s filters viewer/filters.js -o filters.bin.js",
-    "test": "mocha epub/test.js viewer/test.js"
+    "build": "browserify -s epub epub/index.js -o book.bin.js && browserify -s viewer viewer/index.js -o viewer.bin.js",
+    "test": "mocha epub/test.js viewer/*.test.js"
   },
   "devDependencies": {
     "browserify": "^16.2.3",

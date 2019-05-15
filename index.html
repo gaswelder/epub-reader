@@ -6,8 +6,7 @@
     <link rel="stylesheet" href="book.css" />
     <link rel="stylesheet" href="viewer/styles.css" />
     <script src="book.bin.js"></script>
-    <script src="hyphenate.bin.js"></script>
-    <script src="filters.bin.js"></script>
+    <script src="viewer.bin.js"></script>
     <script>
       function makeTOC(chapters) {
         let s = "<ol>";
@@ -64,7 +63,7 @@
           containers.text.innerHTML = "Loading " + input.files[0].name;
 
           // No need in FileReader, the underlying library takes care of it.
-          book = await epub.load(data, filters.apply);
+          book = await epub.load(data, viewer.filters.apply);
 
           const pager = book.pager();
           pager.onConvertProgress(function(progress) {
@@ -120,7 +119,7 @@
             if (ch.nodeType != 3) {
               continue;
             }
-            ch.textContent = hyphenate.hyphenate(ch.textContent);
+            ch.textContent = viewer.hyphenate(ch.textContent);
           }
         }
       }

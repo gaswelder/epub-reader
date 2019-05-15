@@ -4,7 +4,7 @@ const SoftHyphen = "­";
 /**
  * Hyphenates a given text.
  */
-exports.hyphenate = function(text, hyphen = SoftHyphen) {
+module.exports = function(text, hyphen = SoftHyphen) {
   return split(text)
     .map(str => (isWord(str) ? hyphenateWord(str, hyphen) : str))
     .join("");

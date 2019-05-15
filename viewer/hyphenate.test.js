@@ -1,5 +1,5 @@
 const assert = require("assert");
-const { hyphenate } = require("./hyphenate");
+const { hyphenate } = require("./index");
 
 describe("hyphenate", function() {
   const samples = [
