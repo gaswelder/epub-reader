@@ -9,17 +9,23 @@
     <script src="viewer.bin.js"></script>
     <script>
       function centralContent(input, text, bookProxy) {
+        const openButton = document.createElement("button");
+        openButton.innerHTML = "Open";
+        openButton.addEventListener("click", function() {
+          input.click();
+        });
+        if (input.files.length == 0) {
+          text.appendChild(openButton);
+        }
+
+        const loadingStatus = document.createElement("p");
+        const loader = document.createElement("progress");
+        loader.max = 100;
+
         file.addEventListener("change", function() {
           loadBook();
         });
-        if (input.files.length == 0) {
-          const openButton = document.createElement("button");
-          openButton.innerHTML = "Open";
-          openButton.addEventListener("click", function() {
-            input.click();
-          });
-          text.appendChild(openButton);
-        }
+
         loadBook();
 
         async function loadBook() {
@@ -28,20 +34,21 @@
             return;
           }
 
-          text.innerHTML = "Loading " + input.files[0].name;
+          openButton.remove();
+
+          loader.max = 100;
+          text.appendChild(loadingStatus);
+          text.appendChild(loader);
 
           // No need in FileReader, the underlying library takes care of it.
           const book = await epub.load(data, viewer.filters.apply);
           bookProxy.set(book);
 
-          const pager = bookProxy.get().pager();
+          const pager = book.pager();
           pager.onConvertProgress(function(progress) {
-            text.innerHTML =
-              "Loading " +
-              input.files[0].name +
-              ": " +
-              Math.round(progress * 100) +
-              "%";
+            const val = Math.round(progress * 100);
+            loader.value = Math.round(val);
+            loadingStatus.innerHTML = `Loading ${input.files[0].name}: ${val}%`;
           });
 
           text.lang = "en";
