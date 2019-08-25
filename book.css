@@ -284,7 +284,6 @@ aside.footnote::before,
 aside.fn::before {
   counter-increment: fnaside;
   content: counter(fnaside);
-  display: inline-block;
   float: left;
   font-size: smaller;
   position: relative;
