@@ -2,6 +2,7 @@ const writers = require("./writers");
 const source = require("./source");
 const xmldoc = require("xmldoc");
 const path = require("path");
+const fs = require("fs");
 
 const [input, output] = process.argv.slice(2);
 
@@ -51,25 +52,28 @@ async function pack(dir, writer) {
     </container>
     `
   );
-  await writer.put("epub/styles.css", ".benice { color: pink }");
+  await writer.put(
+    "epub/styles.css",
+    fs.readFileSync(__dirname + "/style.css")
+  );
   const flatChapters = flatten(chapters);
   await writer.put(manifestPath, manifest(flatChapters, images, meta));
   await writer.put(root + "toc.ncx", ncx(chapters));
   for (const chapter of flatChapters) {
-    await writer.put(root + chapter.path, formatChapter(chapter));
+    await writer.put(root + chapter.path, formatChapter(chapter, meta));
   }
   for (const file of images) {
     await writer.put(root + file.path, file.content);
   }
 }
 
-function formatChapter(chapter) {
+function formatChapter(chapter, meta) {
   const xml = `<?xml version="1.0" encoding="utf-8"?>
     <html
       xmlns="http://www.w3.org/1999/xhtml"
       xmlns:epub="http://www.idpf.org/2007/ops"
-      lang="en-GB"
-      xml:lang="en-GB"
+      lang="${meta.language}"
+      xml:lang="${meta.language}"
     >
       <head>
         <title>${chapter.title || ""}</title>
@@ -100,7 +104,12 @@ function manifest(chapters, images, meta) {
 
   // reference href="..." title="..." type="title-page text || bodymatter"
   const xml = `<?xml version="1.0" encoding="utf-8"?>
-    <package xmlns="http://www.idpf.org/2007/opf" dir="ltr" unique-identifier="uid" version="3.0" xml:lang="en-US">
+    <package
+      xmlns="http://www.idpf.org/2007/opf"
+      dir="ltr"
+      unique-identifier="uid"
+      version="3.0"
+      xml:lang="${meta.language}">
         <metadata
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:opf="http://www.idpf.org/2007/opf"
@@ -214,3 +223,5 @@ function xmlEscape(str) {
     .replace(/</g, "&lt;")
     .replace(/&/g, "&amp;");
 }
+
+// quo, amp, apos, lt and gt quintet.
