@@ -12,6 +12,14 @@
         file.addEventListener("change", function() {
           loadBook();
         });
+        if (input.files.length == 0) {
+          const openButton = document.createElement("button");
+          openButton.innerHTML = "Open";
+          openButton.addEventListener("click", function() {
+            input.click();
+          });
+          text.appendChild(openButton);
+        }
         loadBook();
 
         async function loadBook() {
