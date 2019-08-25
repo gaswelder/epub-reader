@@ -8,6 +8,76 @@
     <script src="book.bin.js"></script>
     <script src="viewer.bin.js"></script>
     <script>
+      function centralContent(input, text, bookProxy) {
+        file.addEventListener("change", function() {
+          loadBook();
+        });
+        loadBook();
+
+        async function loadBook() {
+          const data = input.files[0];
+          if (!data) {
+            return;
+          }
+
+          text.innerHTML = "Loading " + input.files[0].name;
+
+          // No need in FileReader, the underlying library takes care of it.
+          const book = await epub.load(data, viewer.filters.apply);
+          bookProxy.set(book);
+
+          const pager = bookProxy.get().pager();
+          pager.onConvertProgress(function(progress) {
+            text.innerHTML =
+              "Loading " +
+              input.files[0].name +
+              ": " +
+              Math.round(progress * 100) +
+              "%";
+          });
+
+          text.lang = "en";
+
+          const pages = await pager.all();
+          const css = await book.stylesheet();
+          text.innerHTML =
+            `<style>${css}</style>` +
+            pages
+              .map(function(page, index) {
+                return pageHTML(page, index + 1);
+              })
+              .join("");
+          makeHyphens(text);
+        }
+
+        function pageHTML(page, number) {
+          return `<div class="pagenumber">${number}</div>` + page;
+        }
+
+        function makeHyphens(root) {
+          if (hyphensSupported()) {
+            return;
+          }
+          for (const node of root.querySelectorAll(
+            "p, span, b, strong, em, i, blockquote"
+          )) {
+            for (const ch of node.childNodes) {
+              if (ch.nodeType != 3) {
+                continue;
+              }
+              ch.textContent = viewer.hyphenate(ch.textContent);
+            }
+          }
+        }
+
+        function hyphensSupported() {
+          return (
+            navigator.userAgent.indexOf("Firefox") > 0 &&
+            navigator.userAgent.indexOf("Chrome") < 0
+          );
+        }
+      }
+
       function makeTOC(chapters) {
         let s = "<ol>";
         for (const c of chapters) {
@@ -34,6 +104,20 @@
          */
         let book;
 
+        const bookProxy = {
+          listeners: [],
+          get() {
+            return book;
+          },
+          set(v) {
+            book = v;
+            this.listeners.forEach(fn => fn(book));
+          },
+          onChange(fn) {
+            this.listeners.push(fn);
+          }
+        };
+
         containers.toc.addEventListener("click", function(event) {
           // Close the menu when a chapter is selected in the menu.
           if (event.target.tagName.toLowerCase() == "a") {
@@ -48,53 +132,13 @@
         async function renderTOC() {
           containers.toc.innerHTML = makeTOC(await book.toc());
         }
+        bookProxy.onChange(renderTOC);
+        // await renderTOC();
 
-        function pageHTML(page, number) {
-          return `<div class="pagenumber">${number}</div>` + page;
-        }
-
-        async function loadBook() {
-          const input = containers.file;
-          const data = input.files[0];
-          if (!data) {
-            return;
-          }
-
-          containers.text.innerHTML = "Loading " + input.files[0].name;
-
-          // No need in FileReader, the underlying library takes care of it.
-          book = await epub.load(data, viewer.filters.apply);
-
-          const pager = book.pager();
-          pager.onConvertProgress(function(progress) {
-            containers.text.innerHTML =
-              "Loading " +
-              input.files[0].name +
-              ": " +
-              Math.round(progress * 100) +
-              "%";
-          });
-
-          await renderTOC();
-          containers.text.lang = "en";
-
-          const pages = await pager.all();
-          const css = await book.stylesheet();
-          containers.text.innerHTML =
-            `<style>${css}</style>` +
-            pages
-              .map(function(page, index) {
-                return pageHTML(page, index + 1);
-              })
-              .join("");
-          makeHyphens(containers.text);
-        }
-
-        loadBook();
+        centralContent(containers.file, containers.text, bookProxy);
 
         containers.file.addEventListener("change", function() {
           closeMenu();
-          loadBook();
         });
 
         menu
@@ -109,29 +153,6 @@
           }
           window.open(event.target.src);
         });
-      }
-
-      function makeHyphens(root) {
-        if (hyphensSupported()) {
-          return;
-        }
-        for (const node of root.querySelectorAll(
-          "p, span, b, strong, em, i, blockquote"
-        )) {
-          for (const ch of node.childNodes) {
-            if (ch.nodeType != 3) {
-              continue;
-            }
-            ch.textContent = viewer.hyphenate(ch.textContent);
-          }
-        }
-      }
-
-      function hyphensSupported() {
-        return (
-          navigator.userAgent.indexOf("Firefox") > 0 &&
-          navigator.userAgent.indexOf("Chrome") < 0
-        );
       }
     </script>
   </head>
