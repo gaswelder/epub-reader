@@ -10,6 +10,42 @@ function readfile(name) {
   return files.get(name);
 }
 
+function checkBook(book, title) {
+  describe("book: " + title, function() {
+    it("reads covers", async function() {
+      const cover = await book.cover();
+      assert.ok(cover.type == "image/jpeg" || cover.type == "image/png");
+    });
+
+    it("title", function() {
+      const title = book.title();
+      assert.ok(title, "empty title");
+    });
+
+    it("splits to pages", async function() {
+      const pages = await book.pager().all();
+      assert.ok(pages.length > 1);
+    });
+
+    it("has progress callback", async function() {
+      const pager = book.pager();
+
+      const progressValues = [];
+      pager.onConvertProgress(function(n) {
+        progressValues.push(n);
+      });
+
+      await pager.all();
+      assert.ok(progressValues.length > 1);
+    });
+
+    it("returns the stylesheet", async function() {
+      const css = await book.stylesheet();
+      assert.ok(css.length > 0);
+    });
+  });
+}
+
 describe("content check", function() {
   const samples = [["comp", 28], ["jeff", 12], ["math", 126]];
 
@@ -23,39 +59,13 @@ describe("content check", function() {
   }
 });
 
-describe("epub", function() {
-  let jeff;
-
-  before("get jeff", async function() {
-    const src = fs.readFileSync("samples/jeff.epub");
-    jeff = await Book.load(src);
-  });
-
-  it("reads covers", async function() {
-    assert.equal((await jeff.cover()).type, "image/jpeg");
-  });
-
-  it("title", function() {
-    const title = jeff.title();
-    assert.ok(title, "empty title");
-  });
-
-  it("splits to pages", async function() {
-    const pages = await jeff.pager().all();
-    assert.ok(pages.length > 1);
-  });
-
-  it("has progress callback", async function() {
-    const pager = jeff.pager();
-
-    const progressValues = [];
-    pager.onConvertProgress(function(n) {
-      progressValues.push(n);
-    });
-
-    await pager.all();
-    assert.ok(progressValues.length > 1);
-  });
+describe("epub", async function() {
+  const samples = fs.readdirSync("samples/").filter(x => x.endsWith(".epub"));
+  for (const name of samples) {
+    const src = fs.readFileSync(`samples/${name}`);
+    const book = await Book.load(src);
+    checkBook(book, name);
+  }
 
   it("allows custom filters", async function() {
     let called = 0;
@@ -68,13 +78,6 @@ describe("epub", function() {
     const book = await Book.load(src, filter);
     await book.pager().all();
     assert.ok(called > 0);
-  });
-
-  it("returns the stylesheet", async function() {
-    const src = fs.readFileSync(`samples/jeff.epub`);
-    const book = await Book.load(src);
-    const css = await book.stylesheet();
-    assert.ok(css.length > 0);
   });
 });
 
