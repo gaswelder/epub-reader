@@ -57,7 +57,12 @@ function Manifest(node, data) {
    * Returns the book's title.
    */
   this.title = function() {
-    return data.package.metadata[0]["dc:title"][0];
+    const title = data.package.metadata[0]["dc:title"][0];
+    if (typeof title == "object") {
+      return title._;
+    } else {
+      return title;
+    }
   };
 }
 

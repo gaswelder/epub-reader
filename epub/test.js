@@ -19,6 +19,7 @@ function checkBook(book, title) {
 
     it("title", function() {
       const title = book.title();
+      assert.equal(typeof title, "string", "title is not a string");
       assert.ok(title, "empty title");
     });
 
