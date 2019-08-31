@@ -12,6 +12,8 @@ function Book(manifest, filter) {
     return manifest.cover();
   };
 
+  this.title = manifest.title;
+
   /**
    * Returns the book's table of contents
    * as a list of navigation pointer objects.

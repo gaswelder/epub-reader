@@ -24,23 +24,29 @@ describe("content check", function() {
 });
 
 describe("epub", function() {
-  it("reads covers", async function() {
+  let jeff;
+
+  before("get jeff", async function() {
     const src = fs.readFileSync("samples/jeff.epub");
-    const book = await Book.load(src);
-    assert.equal((await book.cover()).type, "image/jpeg");
+    jeff = await Book.load(src);
+  });
+
+  it("reads covers", async function() {
+    assert.equal((await jeff.cover()).type, "image/jpeg");
+  });
+
+  it("title", function() {
+    const title = jeff.title();
+    assert.ok(title, "empty title");
   });
 
   it("splits to pages", async function() {
-    const src = fs.readFileSync("samples/jeff.epub");
-    const book = await Book.load(src);
-    const pages = await book.pager().all();
+    const pages = await jeff.pager().all();
     assert.ok(pages.length > 1);
   });
 
   it("has progress callback", async function() {
-    const src = fs.readFileSync(`samples/jeff.epub`);
-    const book = await Book.load(src);
-    const pager = book.pager();
+    const pager = jeff.pager();
 
     const progressValues = [];
     pager.onConvertProgress(function(n) {

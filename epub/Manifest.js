@@ -52,6 +52,13 @@ function Manifest(node, data) {
       .filter(i => i.$["media-type"] == "text/css")
       .map(i => node.locate(i.$.href));
   };
+
+  /**
+   * Returns the book's title.
+   */
+  this.title = function() {
+    return data.package.metadata[0]["dc:title"][0];
+  };
 }
 
 function Image(manifestItem, zipNode) {
