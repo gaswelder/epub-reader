@@ -1,0 +1,57 @@
+#menu {
+  position: fixed;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  max-width: 30em;
+  transition: all 0.2s;
+}
+#menu.open {
+  width: 90%;
+  height: 80%;
+  background-color: royalblue;
+}
+
+#menu [data-toggle] {
+  border-radius: 6em 0 0 0;
+  border-width: 0;
+  background-color: #4d75ed;
+  width: 6em;
+  height: 6em;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  color: transparent;
+}
+
+#menu > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+#menu:not(.open) > div {
+  display: none;
+}
+
+#toc {
+  flex: 1;
+  overflow: scroll;
+  padding: 1em;
+}
+#toc ol {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+#toc ol ol {
+  margin-left: 1.5em;
+}
+#toc li {
+  margin: 1em 0;
+  color: #d8def0;
+  font-family: sans-serif;
+}
+#toc a {
+  text-decoration: none;
+  color: inherit;
+}
