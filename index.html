@@ -8,20 +8,8 @@
     <script src="book.bin.js"></script>
     <script src="viewer.bin.js"></script>
     <script src="viewer/ui/content.js"></script>
+    <script src="viewer/ui/toc.js"></script>
     <script>
-      function makeTOC(chapters) {
-        let s = "<ol>";
-        for (const c of chapters) {
-          s += `<li><a href="${c.href()}">` + c.title() + "</a>";
-          if (c.children().length > 0) {
-            s += makeTOC(c.children());
-          }
-          s += "</li>";
-        }
-        s += "</ol>";
-        return s;
-      }
-
       function main() {
         const containers = {
           toc: document.querySelector("#toc"),
@@ -49,23 +37,6 @@
           }
         };
 
-        containers.toc.addEventListener("click", function(event) {
-          // Close the menu when a chapter is selected in the menu.
-          if (event.target.tagName.toLowerCase() == "a") {
-            closeMenu();
-          }
-        });
-
-        function closeMenu() {
-          menu.classList.remove("open");
-        }
-
-        async function renderTOC() {
-          containers.toc.innerHTML = makeTOC(await book.toc());
-        }
-        bookProxy.onChange(renderTOC);
-        // await renderTOC();
-
         centralContent(
           epub,
           viewer,
@@ -73,16 +44,7 @@
           containers.text,
           bookProxy
         );
-
-        containers.file.addEventListener("change", function() {
-          closeMenu();
-        });
-
-        menu
-          .querySelector("[data-toggle]")
-          .addEventListener("click", function(event) {
-            menu.classList.toggle("open");
-          });
+        initTOC(bookProxy, menu, containers.toc, containers.file);
 
         containers.text.addEventListener("dblclick", function(event) {
           if (event.target.tagName.toLowerCase() !== "img") {
