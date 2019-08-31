@@ -1,55 +1,29 @@
 const JSZip = require("jszip");
-const NavPoint = require("./NavPoint");
 const xml2js = require("xml2js");
 const Manifest = require("./Manifest");
 const ZipNode = require("./ZipNode");
 const Pager = require("./Pager");
+const Ncx = require("./Ncx");
 
 module.exports = Book;
 
 function Book(manifest, filter) {
+  const ncx = new Ncx(manifest);
+
   this.cover = function() {
     return manifest.cover();
   };
 
+  /**
+   * Returns the book's title.
+   */
   this.title = manifest.title;
 
   /**
    * Returns the book's table of contents
    * as a list of navigation pointer objects.
    */
-  this.toc = async function() {
-    function ns(data) {
-      if (typeof data != "object") {
-        return data;
-      }
-      return new Proxy(data, {
-        get(t, k) {
-          if (typeof k != "string") {
-            return t[k];
-          }
-          return ns(t[k] || t["ncx:" + k]);
-        }
-      });
-    }
-
-    function parsePoints(root) {
-      return root.map(function(p) {
-        const title = p.navLabel[0].text[0];
-        const src = p.content[0].$.src;
-        const children = p.navPoint ? parsePoints(p.navPoint) : [];
-        return new NavPoint(title, src, children);
-      });
-    }
-
-    const xml = await parseXML(
-      await manifest
-        .node()
-        .locate("toc.ncx")
-        .data("string")
-    );
-    return parsePoints(ns(xml.ncx.navMap[0]).navPoint);
-  };
+  this.toc = ncx.list;
 
   this._chapters = function() {
     return manifest.chapters(filter);
