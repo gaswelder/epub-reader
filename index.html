@@ -10,6 +10,8 @@
     <script src="viewer/ui/content.js"></script>
     <script src="viewer/ui/sidebar.js"></script>
     <link rel="stylesheet" href="viewer/ui/sidebar.css" />
+    <script src="viewer/ui/header.js"></script>
+    <link rel="stylesheet" href="viewer/ui/header.css" />
     <script>
       function main() {
         const containers = {
@@ -18,6 +20,7 @@
           file: document.querySelector("#file")
         };
         const menu = document.querySelector("#menu");
+        const header = document.querySelector("#header");
 
         /**
          * The book that is currently loaded.
@@ -46,6 +49,7 @@
           bookProxy
         );
         initSidebar(bookProxy, menu, containers.toc, containers.file);
+        initHeader(header, bookProxy);
 
         containers.text.addEventListener("dblclick", function(event) {
           if (event.target.tagName.toLowerCase() !== "img") {
@@ -57,9 +61,12 @@
     </script>
   </head>
   <body>
+    <div id="header">
+      <span></span>
+      <input type="file" id="file" />
+    </div>
     <div id="menu">
       <div>
-        <input type="file" id="file" />
         <div id="toc"></div>
       </div>
       <button data-toggle>Toggle</button>

@@ -1,8 +1,10 @@
-window.initSidebar = function(bookProxy, menu, toc, file) {
+window.initSidebar = function(bookProxy, container, toc, file) {
   /**
    * Show/hide the menu when the toggle button is pressed.
    */
-  menu.querySelector("[data-toggle]").addEventListener("click", toggleMenu);
+  container
+    .querySelector("[data-toggle]")
+    .addEventListener("click", toggleMenu);
 
   /**
    * Hide the menu when a chapter is selected from it.
@@ -26,11 +28,11 @@ window.initSidebar = function(bookProxy, menu, toc, file) {
   bookProxy.onChange(renderTOC);
 
   function closeMenu() {
-    menu.classList.remove("open");
+    container.classList.remove("open");
   }
 
   function toggleMenu() {
-    menu.classList.toggle("open");
+    container.classList.toggle("open");
   }
 
   async function renderTOC() {
