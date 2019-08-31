@@ -68,9 +68,35 @@ function Book(manifest, filter) {
   };
 }
 
+/**
+ * Reads the given source and returns a book object.
+ * The source is whatever can be read by JSZip.
+ */
 Book.load = async function(src, filter) {
   const zip = await new JSZip().loadAsync(src);
+  const manifest = await getManifest(zip);
+  return new Book(manifest, filter);
+};
 
+/**
+ * Reads the given zip and returns a manifest object.
+ *
+ * @param {JSZip} zip
+ * @returns {Manifest}
+ */
+async function getManifest(zip) {
+  const indexPath = await rootFilePath(zip);
+  const indexNode = new ZipNode(zip, indexPath);
+  const manifestData = await parseXML(
+    await zip.file(indexPath).async("string")
+  );
+  return new Manifest(indexNode, manifestData);
+}
+
+/**
+ * Returns the path to the manifest file.
+ */
+async function rootFilePath(zip) {
   const container = await zip.file("META-INF/container.xml").async("string");
   const containerData = await parseXML(container);
   const rootFile = containerData.container.rootfiles[0].rootfile[0];
@@ -79,14 +105,8 @@ Book.load = async function(src, filter) {
       "Expected 'application/oebps-package+xml, got " + rootFile.$["media-type"]
     );
   }
-
-  const indexPath = rootFile.$["full-path"];
-  const data = await parseXML(await zip.file(indexPath).async("string"));
-  const indexNode = new ZipNode(zip, indexPath);
-  const manifest = new Manifest(indexNode, data);
-
-  return new Book(manifest, filter);
-};
+  return rootFile.$["full-path"];
+}
 
 function parseXML(str, options = {}) {
   return new Promise(function(ok) {
