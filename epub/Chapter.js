@@ -1,12 +1,24 @@
 const xml = require("./xml");
 const xmldoc = require("xmldoc");
+const toHTML = require("./html");
 
 module.exports = Chapter;
 
 const isImage = ch => ch.name == "img" || ch.name == "image";
 
 function Chapter(zipNode, manifest, filter) {
-  this._convert = async function() {
+  /**
+   * Returns contents of the chapter as HTML string.
+   */
+  this.html = async function(filter) {
+    const elements = await read(filter);
+    return elements.map(toHTML).join("");
+  };
+
+  /**
+   * Returns contents of the chapter as a list of elements.
+   */
+  async function read(filter) {
     const str = await zipNode.data("string");
     const doc = new xmldoc.XmlDocument(str);
     await embedImages(doc, zipNode, manifest);
@@ -34,6 +46,10 @@ function Chapter(zipNode, manifest, filter) {
 
     elements.push(...body.children);
     return elements;
+  }
+
+  this._convert = function() {
+    return read(filter);
   };
 }
 

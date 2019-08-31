@@ -36,29 +36,27 @@ window.centralContent = (function() {
       const book = await epub.load(data, viewer.filters.apply);
       bookProxy.set(book);
 
-      const pager = book.pager();
-      pager.onConvertProgress(function(progress) {
-        const val = Math.round(progress * 100);
+      const chapters = book.chapters();
+      const n = chapters.length;
+      const chaptersHTML = [];
+
+      function setProgress(i) {
+        const val = Math.round((i / n) * 100);
         loader.value = Math.round(val);
         loadingStatus.innerHTML = `Loading ${input.files[0].name}: ${val}%`;
-      });
+      }
+
+      for (let i = 0; i < n; i++) {
+        setProgress(i);
+        chaptersHTML.push(await chapters[i].html());
+        setProgress(i + 1);
+      }
 
       text.lang = "en";
 
-      const pages = await pager.all();
       const css = await book.stylesheet();
-      text.innerHTML =
-        `<style>${css}</style>` +
-        pages
-          .map(function(page, index) {
-            return pageHTML(page, index + 1);
-          })
-          .join("");
+      text.innerHTML = `<style>${css}</style>` + chaptersHTML.join("");
       makeHyphens(text);
-    }
-
-    function pageHTML(page, number) {
-      return `<div class="pagenumber">${number}</div>` + page;
     }
 
     function makeHyphens(root) {

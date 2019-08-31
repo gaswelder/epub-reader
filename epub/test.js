@@ -12,21 +12,36 @@ function readfile(name) {
 
 function checkBook(book, title) {
   describe("book: " + title, function() {
-    it("reads covers", async function() {
-      const cover = await book.cover();
-      assert.ok(cover.type == "image/jpeg" || cover.type == "image/png");
-    });
-
     it("title", function() {
       const title = book.title();
       assert.equal(typeof title, "string", "title is not a string");
       assert.ok(title, "empty title");
     });
 
+    it("cover", async function() {
+      const cover = await book.cover();
+      assert.ok(cover.type == "image/jpeg" || cover.type == "image/png");
+    });
+
+    it("chapters", async function() {
+      const chapters = book.chapters();
+      assert.ok(Array.isArray(chapters), "chapters is not an array");
+      assert.ok(chapters.length > 0, "no chapters");
+
+      for (const c of chapters) {
+        const contents = await c.html();
+        assert.equal(
+          typeof contents,
+          "string",
+          "chapter.html() is not a string"
+        );
+      }
+    });
+
     it("has progress callback", async function() {
+      const progressValues = [];
       const pager = book.pager();
 
-      const progressValues = [];
       pager.onConvertProgress(function(n) {
         progressValues.push(n);
       });

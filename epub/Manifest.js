@@ -38,6 +38,15 @@ function Manifest(node, data) {
 
   this.node = () => node;
 
+  this._chapters = function() {
+    const refs = data.package.spine[0].itemref;
+    return refs.map(function(ref) {
+      const id = ref.$.idref;
+      const item = findItem(i => i.$.id == id);
+      return new Chapter(node.locate(item.$.href), _this);
+    });
+  };
+
   this.chapters = function(filter) {
     const refs = data.package.spine[0].itemref;
     return refs.map(function(ref) {

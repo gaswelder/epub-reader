@@ -29,6 +29,13 @@ function Book(manifest, filter) {
     return manifest.chapters(filter);
   };
 
+  /**
+   * Returns the list of the book's chapters.
+   */
+  this.chapters = function() {
+    return manifest._chapters();
+  };
+
   this.pager = function() {
     return new Pager(this);
   };
