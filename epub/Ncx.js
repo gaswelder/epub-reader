@@ -1,17 +1,16 @@
-const NavPoint = require("./NavPoint");
 const xml2js = require("xml2js");
 
 module.exports = Ncx;
 
 function Ncx(manifest) {
   this.list = async function() {
-    const xml = await parseXML(
+    const tocData = await parseXML(
       await manifest
         .node()
         .locate("toc.ncx")
         .data("string")
     );
-    return parsePoints(ns(xml.ncx.navMap[0]).navPoint);
+    return parsePoints(ns(tocData.ncx.navMap[0]).navPoint);
   };
 }
 
@@ -20,7 +19,11 @@ function parsePoints(root) {
     const title = p.navLabel[0].text[0];
     const src = p.content[0].$.src;
     const children = p.navPoint ? parsePoints(p.navPoint) : [];
-    return new NavPoint(title, src, children);
+    return {
+      title: () => title,
+      children: () => children,
+      href: () => src
+    };
   });
 }
 

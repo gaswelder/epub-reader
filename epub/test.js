@@ -83,6 +83,7 @@ describe("toc", function() {
     function TOC(toc, indent = "  ") {
       let s = "";
       for (const t of toc) {
+        assert.ok(t.href(), "missing href");
         s += indent + t.title() + ` (${t.href()})` + "\n";
         if (t.children().length > 0) {
           s += TOC(t.children(), indent + indent);
