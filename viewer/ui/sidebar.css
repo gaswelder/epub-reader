@@ -1,42 +1,61 @@
+/*
+ * Contains the toggle button and the actual sidebar.
+ */
 #menu {
   position: fixed;
   z-index: 1;
-  right: 0;
+  top: 0;
   bottom: 0;
-  max-width: 30em;
-  transition: all 0.2s;
-}
-#menu.open {
-  width: 90%;
-  height: 80%;
-  background-color: royalblue;
+  right: 0;
+  width: 100px;
 }
 
+/*
+ * Toggle button
+ */
 #menu [data-toggle] {
-  border-radius: 6em 0 0 0;
+  border-radius: 50%;
   border-width: 0;
   background-color: #4d75ed;
   width: 6em;
   height: 6em;
   position: absolute;
-  right: 0;
-  bottom: 0;
-  color: transparent;
+  right: 6px;
+  bottom: 6px;
+  color: white;
+}
+#menu.open [data-toggle] {
+  background-color: white;
+  color: #4d75ed;
 }
 
+/*
+ * The sidebar
+ */
 #menu > div {
-  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 20em;
+  background-color: royalblue;
   display: flex;
   flex-direction: column;
+  transition: all 0.2s;
 }
 #menu:not(.open) > div {
-  display: none;
+  right: -20em;
 }
 
+/*
+ * Table of contents
+ */
 #toc {
   flex: 1;
   overflow: scroll;
   padding: 1em;
+  font-weight: bold;
+  font-size: 11pt;
 }
 #toc ol {
   list-style-type: none;
