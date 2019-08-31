@@ -8,7 +8,7 @@
     <script src="book.bin.js"></script>
     <script src="viewer.bin.js"></script>
     <script src="viewer/ui/content.js"></script>
-    <script src="viewer/ui/toc.js"></script>
+    <script src="viewer/ui/sidebar.js"></script>
     <script>
       function main() {
         const containers = {
@@ -44,7 +44,7 @@
           containers.text,
           bookProxy
         );
-        initTOC(bookProxy, menu, containers.toc, containers.file);
+        initSidebar(bookProxy, menu, containers.toc, containers.file);
 
         containers.text.addEventListener("dblclick", function(event) {
           if (event.target.tagName.toLowerCase() !== "img") {

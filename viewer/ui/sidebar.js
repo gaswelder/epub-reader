@@ -1,4 +1,4 @@
-window.initTOC = function(bookProxy, menu, toc, file) {
+window.initSidebar = function(bookProxy, menu, toc, file) {
   /**
    * Show/hide the menu when the toggle button is pressed.
    */
