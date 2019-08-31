@@ -22,11 +22,6 @@ function checkBook(book, title) {
       assert.ok(title, "empty title");
     });
 
-    it("splits to pages", async function() {
-      const pages = await book.pager().all();
-      assert.ok(pages.length > 1);
-    });
-
     it("has progress callback", async function() {
       const pager = book.pager();
 
