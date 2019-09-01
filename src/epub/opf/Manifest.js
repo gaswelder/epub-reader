@@ -6,7 +6,11 @@ module.exports = Manifest;
 
 function Manifest(node, manifest_) {
   this.ncx = function() {
-    return new Ncx(node.locate("toc.ncx"));
+    const item = findItem(i => i.$["media-type"] == "application/x-dtbncx+xml");
+    if (!item) {
+      throw new Error("couldn't find NCX item in the manifest");
+    }
+    return new Ncx(node.locate(item.$.href));
   };
 
   this.image = function(path) {
