@@ -1,4 +1,4 @@
-const Ncx = require("./Ncx");
+const Ncx = require("./opf/Ncx");
 
 module.exports = Book;
 

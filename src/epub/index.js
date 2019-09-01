@@ -1,6 +1,6 @@
 const JSZip = require("jszip");
 const xml2js = require("xml2js");
-const Manifest = require("./Manifest");
+const Manifest = require("./opf/Manifest");
 const ZipNode = require("./ZipNode");
 const Book = require("./Book");
 

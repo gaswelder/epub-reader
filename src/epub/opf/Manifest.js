@@ -1,6 +1,6 @@
-module.exports = Manifest;
+const Chapter = require("../Chapter");
 
-const Chapter = require("./Chapter");
+module.exports = Manifest;
 
 function Manifest(node, data) {
   function fullpath(p) {
