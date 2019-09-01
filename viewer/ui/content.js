@@ -51,7 +51,7 @@ window.centralContent = function(epub, viewer, input, text, bookProxy) {
       setProgress(i + 1);
     }
 
-    text.lang = "en";
+    text.lang = book.language();
 
     const css = await book.stylesheet();
     text.innerHTML = `<style>${css}</style>` + chaptersHTML.join("");
