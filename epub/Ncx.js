@@ -3,28 +3,29 @@ const xml2js = require("xml2js");
 module.exports = Ncx;
 
 function Ncx(manifest) {
+  const node = manifest.node();
+
   this.list = async function() {
-    const tocData = await parseXML(
-      await manifest
-        .node()
-        .locate("toc.ncx")
-        .data("string")
-    );
+    const tocData = await parseXML(await node.locate("toc.ncx").data("string"));
     return parsePoints(ns(tocData.ncx.navMap[0]).navPoint);
   };
-}
 
-function parsePoints(root) {
-  return root.map(function(p) {
-    const title = p.navLabel[0].text[0];
-    const src = p.content[0].$.src;
-    const children = p.navPoint ? parsePoints(p.navPoint) : [];
-    return {
-      title: () => title,
-      children: () => children,
-      href: () => src
-    };
-  });
+  function parsePoints(root) {
+    return root.map(function(p) {
+      const title = p.navLabel[0].text[0];
+      const src = p.content[0].$.src;
+      const children = p.navPoint ? parsePoints(p.navPoint) : [];
+
+      return {
+        title: () => title,
+        children: () => children,
+        /**
+         * Returns the target chapter's archive path.
+         */
+        path: () => node.locate(src).path()
+      };
+    });
+  }
 }
 
 function ns(data) {

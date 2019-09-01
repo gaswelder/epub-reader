@@ -42,7 +42,7 @@ window.initSidebar = function(bookProxy, container, toc, file) {
   function makeTOC(chapters) {
     let s = "<ol>";
     for (const c of chapters) {
-      s += `<li><a href="${c.href()}">` + c.title() + "</a>";
+      s += `<li><a href="#${c.path()}">` + c.title() + "</a>";
       if (c.children().length > 0) {
         s += makeTOC(c.children());
       }

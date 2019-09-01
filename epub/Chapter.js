@@ -16,30 +16,22 @@ function Chapter(zipNode, manifest) {
   };
 
   /**
+   * Returns the chapter's archive path.
+   */
+  this.path = function() {
+    return zipNode.path();
+  };
+
+  /**
    * Returns contents of the chapter as a list of elements.
    */
   async function read(filter) {
     const str = await zipNode.data("string");
     const doc = new xmldoc.XmlDocument(str);
     await embedImages(doc, zipNode, manifest);
-    for (const a of xml.find(doc, ch => ch.name == "a")) {
-      a.attr.href = urlHash(a.attr.href);
-    }
 
     const elements = [];
-
-    // If the body has an ID (a navigation target), inject an anchor with that ID.
     const body = doc.childNamed("body");
-    if (body.attr.id) {
-      elements.push({
-        name: "a",
-        attr: {
-          id: body.attr.id
-        },
-        children: []
-      });
-    }
-
     if (filter) {
       filter(body);
     }
@@ -64,14 +56,6 @@ async function embedImages(doc, zipNode, manifest) {
 
     image.attr[hrefAttr] = dataURI(img64, type);
   }
-}
-
-function urlHash(url) {
-  if (!url) {
-    return "#URL_WAS_MISSING";
-  }
-  const hash = url.split("#")[1];
-  return hash ? "#" + hash : "";
 }
 
 /**

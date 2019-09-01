@@ -29,12 +29,8 @@ function checkBook(book, title) {
       assert.ok(chapters.length > 0, "no chapters");
 
       for (const c of chapters) {
-        const contents = await c.html();
-        assert.equal(
-          typeof contents,
-          "string",
-          "chapter.html() is not a string"
-        );
+        const html = await c.html();
+        assert.equal(typeof html, "string", "chapter.html() is not a string");
       }
     });
 
@@ -45,36 +41,28 @@ function checkBook(book, title) {
   });
 }
 
+async function checkTOC(book) {
+  function TOC(toc, indent = "  ") {
+    let s = "";
+    for (const t of toc) {
+      s += indent + t.title() + ` (${t.path()})` + "\n";
+      if (t.children().length > 0) {
+        s += TOC(t.children(), indent + indent);
+      }
+    }
+    return s;
+  }
+
+  const toc = await book.toc();
+  console.log(TOC(toc));
+}
+
 describe("epub", async function() {
   const samples = fs.readdirSync("samples/").filter(x => x.endsWith(".epub"));
   for (const name of samples) {
     const src = fs.readFileSync(`samples/${name}`);
     const book = await Book.load(src);
+    checkTOC(book);
     checkBook(book, name);
   }
-});
-
-describe("toc", function() {
-  async function toc(book) {
-    function TOC(toc, indent = "  ") {
-      let s = "";
-      for (const t of toc) {
-        assert.ok(t.href(), "missing href");
-        s += indent + t.title() + ` (${t.href()})` + "\n";
-        if (t.children().length > 0) {
-          s += TOC(t.children(), indent + indent);
-        }
-      }
-      return s;
-    }
-
-    const toc = await book.toc();
-    console.log(TOC(toc));
-  }
-
-  it("toc", async function() {
-    const src = readfile("jeff");
-    const book = await Book.load(src);
-    return toc(book);
-  });
 });

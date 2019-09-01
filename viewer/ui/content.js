@@ -48,7 +48,12 @@ window.centralContent = (function() {
 
       for (let i = 0; i < n; i++) {
         setProgress(i);
-        chaptersHTML.push(await chapters[i].html());
+        const c = chapters[i];
+        let html = await c.html();
+        html = html.replace(/id="/g, `id="${c.path()}#`);
+        html = `<a id="${c.path()}"></a>` + html;
+
+        chaptersHTML.push(html);
         setProgress(i + 1);
       }
 
