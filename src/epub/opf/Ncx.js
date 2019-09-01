@@ -2,8 +2,8 @@ const xml2js = require("xml2js");
 
 module.exports = Ncx;
 
-function Ncx(manifest) {
-  const node = manifest.node();
+function Ncx(root) {
+  const node = root.node();
 
   this.list = async function() {
     const tocData = await parseXML(await node.locate("toc.ncx").data("string"));

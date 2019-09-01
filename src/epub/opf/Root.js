@@ -1,8 +1,8 @@
 const Chapter = require("../Chapter");
 
-module.exports = Manifest;
+module.exports = Root;
 
-function Manifest(node, data) {
+function Root(node, data) {
   function fullpath(p) {
     return node.locate(p).path();
   }
