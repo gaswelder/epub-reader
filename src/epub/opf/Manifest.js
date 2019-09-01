@@ -1,9 +1,14 @@
 const Image = require("./Image");
 const Chapter = require("../Chapter");
+const Ncx = require("./Ncx");
 
 module.exports = Manifest;
 
 function Manifest(node, manifest_) {
+  this.ncx = function() {
+    return new Ncx(node.locate("toc.ncx"));
+  };
+
   this.image = function(path) {
     const item = findItem(i => fullpath(i.$.href) == path);
     if (!item) {

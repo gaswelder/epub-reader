@@ -6,6 +6,7 @@ function Root(node, data) {
   // The manifest is the list of all files.
   const manifest = new Manifest(node, data.package.manifest[0]);
 
+  this.ncx = manifest.ncx;
   this.stylesheets = manifest.stylesheets;
 
   this.cover = function() {
@@ -15,8 +16,6 @@ function Root(node, data) {
     const id = meta.$.content;
     return manifest.imageById(id);
   };
-
-  this.node = () => node;
 
   this.chapters = function() {
     const refs = data.package.spine[0].itemref;
