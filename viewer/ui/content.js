@@ -5,7 +5,12 @@ window.centralContent = function(epub, viewer, input, text, bookProxy) {
   const loader = document.createElement("progress");
   loader.max = 100;
 
+  /**
+   * When a new file is selected, clear the main area and
+   * load the selected book.
+   */
   input.addEventListener("change", function() {
+    text.innerHTML = "";
     loadBook();
   });
 
