@@ -3,7 +3,7 @@ const Ncx = require("./opf/Ncx");
 module.exports = Book;
 
 function Book(root) {
-  const ncx = new Ncx(root);
+  const ncx = new Ncx(root.node().locate("toc.ncx"));
 
   this.cover = root.cover;
 

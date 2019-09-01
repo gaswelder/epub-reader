@@ -2,11 +2,9 @@ const xml2js = require("xml2js");
 
 module.exports = Ncx;
 
-function Ncx(root) {
-  const node = root.node();
-
+function Ncx(zipNode) {
   this.list = async function() {
-    const tocData = await parseXML(await node.locate("toc.ncx").data("string"));
+    const tocData = await parseXML(await zipNode.data("string"));
     return parsePoints(ns(tocData.ncx.navMap[0]).navPoint);
   };
 
@@ -22,7 +20,7 @@ function Ncx(root) {
         /**
          * Returns the target chapter's archive path.
          */
-        path: () => node.locate(src).path()
+        path: () => zipNode.locate(src).path()
       };
     });
   }
