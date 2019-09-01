@@ -6,7 +6,7 @@ module.exports = Chapter;
 
 const isImage = ch => ch.name == "img" || ch.name == "image";
 
-function Chapter(zipNode, root) {
+function Chapter(zipNode, manifest) {
   /**
    * Returns contents of the chapter as HTML string.
    */
@@ -28,7 +28,7 @@ function Chapter(zipNode, root) {
   async function read() {
     const str = await zipNode.data("string");
     const doc = new xmldoc.XmlDocument(str);
-    await embedImages(doc, zipNode, root);
+    await embedImages(doc, zipNode, manifest);
 
     const elements = [];
     const body = doc.childNamed("body");
@@ -38,7 +38,7 @@ function Chapter(zipNode, root) {
   }
 }
 
-async function embedImages(doc, zipNode, root) {
+async function embedImages(doc, zipNode, manifest) {
   for (const image of xml.find(doc, isImage)) {
     let hrefAttr = "src";
     if (image.name == "image") {
@@ -47,7 +47,7 @@ async function embedImages(doc, zipNode, root) {
     const href = image.attr[hrefAttr];
 
     const imageNode = zipNode.locate(href);
-    const img = root.image(imageNode.path());
+    const img = manifest.image(imageNode.path());
     const { type } = img;
     const img64 = await img.data("base64");
 
