@@ -47,10 +47,10 @@ function Book(manifest) {
  * Reads the given source and returns a book object.
  * The source is whatever can be read by JSZip.
  */
-Book.load = async function(src, filter) {
+Book.load = async function(src) {
   const zip = await new JSZip().loadAsync(src);
   const manifest = await getManifest(zip);
-  return new Book(manifest, filter);
+  return new Book(manifest);
 };
 
 /**

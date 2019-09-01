@@ -10,8 +10,8 @@ function Chapter(zipNode, manifest) {
   /**
    * Returns contents of the chapter as HTML string.
    */
-  this.html = async function(filter) {
-    const elements = await read(filter);
+  this.html = async function() {
+    const elements = await read();
     return elements.map(toHTML).join("");
   };
 
@@ -25,16 +25,13 @@ function Chapter(zipNode, manifest) {
   /**
    * Returns contents of the chapter as a list of elements.
    */
-  async function read(filter) {
+  async function read() {
     const str = await zipNode.data("string");
     const doc = new xmldoc.XmlDocument(str);
     await embedImages(doc, zipNode, manifest);
 
     const elements = [];
     const body = doc.childNamed("body");
-    if (filter) {
-      filter(body);
-    }
 
     elements.push(...body.children);
     return elements;

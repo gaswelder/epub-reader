@@ -27,7 +27,7 @@ window.centralContent = function(epub, viewer, input, text, bookProxy) {
     text.appendChild(loader);
 
     // No need in FileReader, the underlying library takes care of it.
-    const book = await epub.load(data, viewer.filters.apply);
+    const book = await epub.load(data);
     bookProxy.set(book);
 
     const chapters = book.chapters();
