@@ -1,12 +1,5 @@
 window.centralContent = function(epub, viewer, input, text, bookProxy) {
-  const openButton = document.createElement("button");
-  openButton.innerHTML = "Open";
-  openButton.addEventListener("click", function() {
-    input.click();
-  });
-  if (input.files.length == 0) {
-    text.appendChild(openButton);
-  }
+  initCentralButton(text, input);
 
   const loadingStatus = document.createElement("p");
   const loader = document.createElement("progress");
@@ -23,8 +16,6 @@ window.centralContent = function(epub, viewer, input, text, bookProxy) {
     if (!data) {
       return;
     }
-
-    openButton.remove();
 
     loader.max = 100;
     text.appendChild(loadingStatus);
@@ -85,3 +76,17 @@ window.centralContent = function(epub, viewer, input, text, bookProxy) {
     );
   }
 };
+
+function initCentralButton(text, input) {
+  const openButton = document.createElement("button");
+  openButton.innerHTML = "Open";
+  openButton.addEventListener("click", function() {
+    input.click();
+  });
+  if (input.files.length == 0) {
+    text.appendChild(openButton);
+  }
+  input.addEventListener("change", function() {
+    openButton.remove();
+  });
+}
