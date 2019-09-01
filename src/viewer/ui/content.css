@@ -10,3 +10,9 @@
   line-height: 18pt;
   overflow-y: scroll;
 }
+
+@media (max-width: 600px) {
+  #main {
+    padding: 2cm 0.5cm;
+  }
+}
