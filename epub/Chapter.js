@@ -6,7 +6,7 @@ module.exports = Chapter;
 
 const isImage = ch => ch.name == "img" || ch.name == "image";
 
-function Chapter(zipNode, manifest, filter) {
+function Chapter(zipNode, manifest) {
   /**
    * Returns contents of the chapter as HTML string.
    */
@@ -47,10 +47,6 @@ function Chapter(zipNode, manifest, filter) {
     elements.push(...body.children);
     return elements;
   }
-
-  this._convert = function() {
-    return read(filter);
-  };
 }
 
 async function embedImages(doc, zipNode, manifest) {

@@ -2,22 +2,14 @@ const JSZip = require("jszip");
 const xml2js = require("xml2js");
 const Manifest = require("./Manifest");
 const ZipNode = require("./ZipNode");
-const Pager = require("./Pager");
 const Ncx = require("./Ncx");
 
 module.exports = Book;
 
-function Book(manifest, filter) {
+function Book(manifest) {
   const ncx = new Ncx(manifest);
 
-  this.cover = function() {
-    return manifest.cover();
-  };
-
-  /**
-   * Returns the book's title.
-   */
-  this.title = manifest.title;
+  this.cover = manifest.cover;
 
   /**
    * Returns the book's table of contents
@@ -25,20 +17,15 @@ function Book(manifest, filter) {
    */
   this.toc = ncx.list;
 
-  this._chapters = function() {
-    return manifest.chapters(filter);
-  };
+  /**
+   * Returns the book's title.
+   */
+  this.title = manifest.title;
 
   /**
    * Returns the list of the book's chapters.
    */
-  this.chapters = function() {
-    return manifest._chapters();
-  };
-
-  this.pager = function() {
-    return new Pager(this);
-  };
+  this.chapters = manifest.chapters;
 
   this.stylesheet = async function() {
     const nodes = manifest.stylesheets();

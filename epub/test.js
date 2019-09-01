@@ -38,37 +38,12 @@ function checkBook(book, title) {
       }
     });
 
-    it("has progress callback", async function() {
-      const progressValues = [];
-      const pager = book.pager();
-
-      pager.onConvertProgress(function(n) {
-        progressValues.push(n);
-      });
-
-      await pager.all();
-      assert.ok(progressValues.length > 1);
-    });
-
     it("returns the stylesheet", async function() {
       const css = await book.stylesheet();
       assert.ok(css.length > 0);
     });
   });
 }
-
-describe("content check", function() {
-  const samples = [["comp", 28], ["jeff", 12], ["math", 126]];
-
-  for (const [name, imagesNumber] of samples) {
-    it(name, async function() {
-      const src = readfile(name);
-      const book = await Book.load(src);
-      const html = (await book.pager().all()).join("");
-      assert.equal(html.match(/<img /g).length, imagesNumber);
-    });
-  }
-});
 
 describe("epub", async function() {
   const samples = fs.readdirSync("samples/").filter(x => x.endsWith(".epub"));
@@ -77,19 +52,6 @@ describe("epub", async function() {
     const book = await Book.load(src);
     checkBook(book, name);
   }
-
-  it("allows custom filters", async function() {
-    let called = 0;
-    function filter(tree) {
-      called++;
-      assert.equal(tree.name, "body");
-      assert.ok(tree.children.length > 0);
-    }
-    const src = fs.readFileSync(`samples/jeff.epub`);
-    const book = await Book.load(src, filter);
-    await book.pager().all();
-    assert.ok(called > 0);
-  });
 });
 
 describe("toc", function() {
