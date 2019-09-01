@@ -23,6 +23,11 @@ function Book(manifest) {
   this.title = manifest.title;
 
   /**
+   * Returns the book't language.
+   */
+  this.language = manifest.language;
+
+  /**
    * Returns the list of the book's chapters.
    */
   this.chapters = manifest.chapters;

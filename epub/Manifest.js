@@ -57,12 +57,14 @@ function Manifest(node, data) {
    * Returns the book's title.
    */
   this.title = function() {
-    const title = data.package.metadata[0]["dc:title"][0];
-    if (typeof title == "object") {
-      return title._;
-    } else {
-      return title;
-    }
+    return getString(data.package.metadata[0]["dc:title"][0]);
+  };
+
+  /**
+   * Returns the book's language.
+   */
+  this.language = function() {
+    return getString(data.package.metadata[0]["dc:language"][0]);
   };
 }
 
@@ -70,4 +72,12 @@ function Image(manifestItem, zipNode) {
   this.type = manifestItem.$["media-type"];
   this.data = zipNode.data.bind(zipNode);
   this.buffer = () => this.data("nodebuffer");
+}
+
+function getString(node) {
+  if (typeof node == "object") {
+    return node._;
+  } else {
+    return node;
+  }
 }

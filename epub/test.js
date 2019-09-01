@@ -18,6 +18,12 @@ function checkBook(book, title) {
       assert.ok(title, "empty title");
     });
 
+    it("language", function() {
+      const lang = book.language();
+      assert.equal(typeof lang, "string");
+      assert.ok(lang);
+    });
+
     it("cover", async function() {
       const cover = await book.cover();
       assert.ok(cover.type == "image/jpeg" || cover.type == "image/png");
