@@ -3,21 +3,6 @@
   margin: 0;
 } */
 
-#main {
-  background-color: white;
-  color: black;
-
-  border-width: 0 1px;
-
-  padding: 2cm 3cm;
-  width: 40em;
-  margin: auto;
-
-  font-family: georgia, serif;
-  font-size: 12pt;
-  line-height: 18pt;
-}
-
 img {
   max-width: 100%;
 }

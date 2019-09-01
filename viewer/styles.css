@@ -4,6 +4,7 @@ html {
   margin: 0;
   padding: 0;
 }
+
 body {
   display: flex;
   flex-direction: column;
@@ -11,11 +12,6 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-}
-#main {
-  flex: 1;
-  border-width: 0;
-  hyphens: auto;
 }
 
 .pagenumber {

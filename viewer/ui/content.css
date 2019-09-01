@@ -1,0 +1,12 @@
+#main {
+  flex: 1;
+  hyphens: auto;
+  background-color: white;
+  color: black;
+  padding: 2cm 3cm;
+  margin: auto;
+  font-family: georgia, serif;
+  font-size: 12pt;
+  line-height: 18pt;
+  overflow-y: scroll;
+}
