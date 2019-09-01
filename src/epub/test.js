@@ -1,6 +1,6 @@
 const assert = require("assert");
 const fs = require("fs");
-const Book = require("./Book.js");
+const Book = require(".");
 
 init();
 async function init() {
