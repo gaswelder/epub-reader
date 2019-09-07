@@ -29,7 +29,11 @@ function Root(node, data) {
    * Returns the book's title.
    */
   this.title = function() {
-    return getString(data.package.metadata[0]["dc:title"][0]);
+    const meta = data.package.metadata[0];
+    if (!meta["dc:title"]) {
+      return null;
+    }
+    return getString(meta["dc:title"][0]);
   };
 
   /**
