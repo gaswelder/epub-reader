@@ -5,47 +5,23 @@ const Book = require("../epub");
 
 const EpubDir = process.argv[2] || ".";
 
-function read(name: string) {
-  return fs.readFileSync(EpubDir + "/" + name);
-}
-
-function list() {
-  const ls = fs.readdirSync(EpubDir);
-  return ls.filter((f) => f.endsWith(".epub"));
-}
-
 const app = express();
+app.set("view engine", "ejs");
+app.set("views", "./src/server/views");
 
 app.get("/", async (req, res) => {
-  res.setHeader("Content-Type", "text/html");
-  res.write(`
-  <!DOCTYPE html>
-  <html>
-  <head>
-  <meta charset="utf-8">
-  <style>
-  body {
-      display: flex;
-      flex-wrap: wrap;
-  }
-  article {
-      width: 200px;
-  }
-  img { height: 200px; width: auto; }
-  </style>
-  </head>
-  <body>
-  `);
-  for (const name of list()) {
-    res.write(`<article><img src="/${name}/cover"><br>${name}</article>`);
-  }
-  res.write("</body></html>");
-  res.end();
+  const names = fs.readdirSync(EpubDir).filter((f) => f.endsWith(".epub"));
+  res.render("index", { names });
 });
 
 app.get("/:name/cover", async (req, res) => {
   const name = decodeURIComponent(req.params.name);
-  const src = read(name);
+  const path = EpubDir + "/" + name;
+  if (!fs.existsSync(path)) {
+    res.sendStatus(404);
+    return;
+  }
+  const src = fs.readFileSync(path);
   const book = await Book.load(src);
   const c = await book.cover();
   res.setHeader("Content-Type", c.type);

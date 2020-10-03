@@ -2,7 +2,7 @@
   "scripts": {
     "build": "browserify -s epub src/epub/index.js -o bin/book.bin.js",
     "test": "mocha --delay -t 0 src/epub/test.js",
-    "serve": "ts-node src/server"
+    "serve-dev": "nodemon src/server/index.ts"
   },
   "devDependencies": {
     "browserify": "^16.2.3",
@@ -15,7 +15,9 @@
   "dependencies": {
     "@types/express": "^4.17.8",
     "@types/node": "^14.11.2",
+    "ejs": "^3.1.5",
     "express": "^4.17.1",
+    "nodemon": "^2.0.4",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.3"
   }

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      article {
+        width: 200px;
+      }
+      img {
+        height: 200px;
+        width: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <% names.forEach(name => { %>
+    <article>
+      <img src="<%= name %>/cover" />
+      <br />
+      <%= name %>
+    </article>
+    <% }) %>
+  </body>
+</html>
