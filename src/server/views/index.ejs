@@ -35,7 +35,7 @@
   <body>
     <% names.forEach(name => { %>
     <article>
-      <img src="<%= name %>/cover" />
+      <a href="<%= name %>"><img src="<%= name %>/cover" /></a>
       <div><%= name %></div>
     </article>
     <% }) %>

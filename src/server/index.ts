@@ -14,6 +14,23 @@ app.get("/", async (req, res) => {
   res.render("index", { names });
 });
 
+app.get("/:name", async (req, res) => {
+  const name = decodeURIComponent(req.params.name);
+  const path = EpubDir + "/" + name;
+  if (!fs.existsSync(path)) {
+    res.sendStatus(404);
+    return;
+  }
+  const src = fs.readFileSync(path);
+  const book = await Book.load(src);
+
+  const html = (
+    await Promise.all(book.chapters().map((ch: any) => ch.html()))
+  ).join("");
+
+  res.send(html);
+});
+
 app.get("/:name/cover", async (req, res) => {
   const name = decodeURIComponent(req.params.name);
   const path = EpubDir + "/" + name;
