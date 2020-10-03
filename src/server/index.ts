@@ -30,5 +30,5 @@ app.get("/:name/cover", async (req, res) => {
 });
 
 app.listen(8080, () => {
-  console.log(`Listening on :8080, serving from ${EpubDir}`);
+  console.log(`Serving ${EpubDir} at http://localhost:8080`);
 });
