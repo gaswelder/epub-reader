@@ -8,11 +8,27 @@
         flex-wrap: wrap;
       }
       article {
-        width: 200px;
+        background: #604f4f;
+        width: 180px;
+        height: 300px;
+        margin: 0 1em 1em 0;
+        color: #dfcbcb;
+        padding: 10px;
+        position: relative;
       }
-      img {
-        height: 200px;
-        width: auto;
+      article img {
+        max-width: 100%;
+      }
+      article div {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        max-height: 96px;
+        background: #604f4f;
+        padding-top: 10px;
       }
     </style>
   </head>
@@ -20,8 +36,7 @@
     <% names.forEach(name => { %>
     <article>
       <img src="<%= name %>/cover" />
-      <br />
-      <%= name %>
+      <div><%= name %></div>
     </article>
     <% }) %>
   </body>
