@@ -1,6 +1,6 @@
 const http = require("http");
 const fs = require("fs");
-const { Book } = require("../book");
+const Book = require("../epub");
 
 const EpubDir = process.argv[2] || ".";
 
@@ -10,11 +10,11 @@ function read(name) {
 
 function list() {
   const ls = fs.readdirSync(EpubDir);
-  return ls.filter(f => f.endsWith(".epub"));
+  return ls.filter((f) => f.endsWith(".epub"));
 }
 
 http
-  .createServer(async function(req, res) {
+  .createServer(async function (req, res) {
     try {
       switch (req.url) {
         case "/":
