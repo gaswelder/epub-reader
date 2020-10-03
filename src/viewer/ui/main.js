@@ -4,7 +4,7 @@ window.main = function main() {
   const containers = {
     toc: document.querySelector("#toc"),
     text: document.querySelector("#main"),
-    file: document.querySelector("#file")
+    file: document.querySelector("#file"),
   };
   const menu = document.querySelector("#menu");
   const header = document.querySelector("#header");
@@ -21,18 +21,18 @@ window.main = function main() {
     },
     set(v) {
       book = v;
-      this.listeners.forEach(fn => fn(book));
+      this.listeners.forEach((fn) => fn(book));
     },
     onChange(fn) {
       this.listeners.push(fn);
-    }
+    },
   };
 
   centralContent(epub, viewer, containers.file, containers.text, bookProxy);
   initSidebar(bookProxy, menu, containers.toc, containers.file);
   initHeader(header, bookProxy);
 
-  containers.text.addEventListener("dblclick", function(event) {
+  containers.text.addEventListener("dblclick", function (event) {
     if (event.target.tagName.toLowerCase() !== "img") {
       return;
     }
