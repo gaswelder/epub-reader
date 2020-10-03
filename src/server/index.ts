@@ -1,6 +1,7 @@
-import http from "http";
-const Book = require("../epub");
 import fs from "fs";
+import express from "express";
+
+const Book = require("../epub");
 
 const EpubDir = process.argv[2] || ".";
 
@@ -13,29 +14,9 @@ function list() {
   return ls.filter((f) => f.endsWith(".epub"));
 }
 
-http
-  .createServer(async function (req, res) {
-    try {
-      switch (req.url) {
-        case "/":
-          await index(req, res);
-          break;
-        default:
-          await cover(req, res);
-      }
-    } catch (e) {
-      console.error(e);
-      res.setHeader("Content-Type", "text/plain");
-      res.writeHead(500);
-      res.write("Error: " + e.toString());
-      res.end();
-    }
-  })
-  .listen(8080, () => {
-    console.log(`Listening on :8080, serving from ${EpubDir}`);
-  });
+const app = express();
 
-async function index(req: any, res: any) {
+app.get("/", async (req, res) => {
   res.setHeader("Content-Type", "text/html");
   res.write(`
   <!DOCTYPE html>
@@ -56,18 +37,22 @@ async function index(req: any, res: any) {
   <body>
   `);
   for (const name of list()) {
-    res.write(`<article><img src="/${name}"><br>${name}</article>`);
+    res.write(`<article><img src="/${name}/cover"><br>${name}</article>`);
   }
   res.write("</body></html>");
   res.end();
-}
+});
 
-async function cover(req: any, res: any) {
-  const name = decodeURIComponent(req.url.substr(1));
+app.get("/:name/cover", async (req, res) => {
+  const name = decodeURIComponent(req.params.name);
   const src = read(name);
   const book = await Book.load(src);
   const c = await book.cover();
   res.setHeader("Content-Type", c.type);
   res.write(await c.buffer());
   res.end();
-}
+});
+
+app.listen(8080, () => {
+  console.log(`Listening on :8080, serving from ${EpubDir}`);
+});
