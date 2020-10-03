@@ -1,10 +1,10 @@
-const http = require("http");
-const fs = require("fs");
+import http from "http";
 const Book = require("../epub");
+import fs from "fs";
 
 const EpubDir = process.argv[2] || ".";
 
-function read(name) {
+function read(name: string) {
   return fs.readFileSync(EpubDir + "/" + name);
 }
 
@@ -35,7 +35,7 @@ http
     console.log(`Listening on :8080, serving from ${EpubDir}`);
   });
 
-async function index(req, res) {
+async function index(req: any, res: any) {
   res.setHeader("Content-Type", "text/html");
   res.write(`
   <!DOCTYPE html>
@@ -62,7 +62,7 @@ async function index(req, res) {
   res.end();
 }
 
-async function cover(req, res) {
+async function cover(req: any, res: any) {
   const name = decodeURIComponent(req.url.substr(1));
   const src = read(name);
   const book = await Book.load(src);
