@@ -8,37 +8,54 @@
         flex-wrap: wrap;
       }
       article {
+        margin: 0 1em 2em 0;
+      }
+      .book {
         background: #604f4f;
         width: 180px;
         height: 300px;
-        margin: 0 1em 1em 0;
         color: #dfcbcb;
-        padding: 10px;
         position: relative;
+        margin-bottom: 5px;
+        padding: 10px;
       }
-      article img {
+      .book img {
         max-width: 100%;
       }
-      article div {
+      .book .title {
         position: absolute;
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        padding: 10px;
         text-overflow: ellipsis;
         overflow: hidden;
         max-height: 96px;
         background: #604f4f;
         padding-top: 10px;
       }
+      .book a {
+        color: #eef;
+        font-family: sans-serif;
+        font-size: 14px;
+      }
+      .download {
+        text-align: center;
+      }
     </style>
   </head>
   <body>
     <% names.forEach(name => { %>
     <article>
-      <a href="<%= name %>">
-        <img src="<%= name %>/cover" />
-        <div><%= name %></div>
-      </a>
+      <div class="book">
+        <a href="<%= encodeURIComponent(name) %>/html">
+          <img src="<%= encodeURIComponent(name) %>/cover" />
+          <div class="title"><%= name %></div>
+        </a>
+      </div>
+      <div class="download">
+        <a href="<%= encodeURIComponent(name) %>">Download</a>
+      </div>
     </article>
     <% }) %>
   </body>

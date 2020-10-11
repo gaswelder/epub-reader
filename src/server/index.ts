@@ -21,6 +21,17 @@ app.get("/:name", async (req, res) => {
     res.sendStatus(404);
     return;
   }
+  res.setHeader("Content-Type", "application/epub+zip");
+  fs.createReadStream(path).pipe(res);
+});
+
+app.get("/:name/html", async (req, res) => {
+  const name = decodeURIComponent(req.params.name);
+  const path = EpubDir + "/" + name;
+  if (!fs.existsSync(path)) {
+    res.sendStatus(404);
+    return;
+  }
   const src = fs.readFileSync(path);
   const book = await Book.load(src);
 
