@@ -57,6 +57,8 @@ app.get("/:name/cover", async (req, res) => {
   res.end();
 });
 
-app.listen(8080, () => {
-  console.log(`Serving ${EpubDir} at http://localhost:8080`);
+const port = 8000;
+
+app.listen(port, () => {
+  console.log(`Serving ${EpubDir} at http://localhost:${port}`);
 });
