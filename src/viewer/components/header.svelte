@@ -1,14 +1,8 @@
 <script>
-  export let bookProxy;
-
-  let title = "";
-
-  bookProxy.onChange(function() {
-    title = bookProxy.get().title();
-  });
+  export let book;
 </script>
 
 <div id="header">
-  <span>{title}</span>
+  <span>{book ? book.title() : ''}</span>
   <input type="file" id="file" />
 </div>

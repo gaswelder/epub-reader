@@ -25,6 +25,6 @@
   };
 </script>
 
-<Header {bookProxy} />
+<Header {book} />
 <Sidebar {bookProxy} />
 <Content {epub} {viewer} {bookProxy} />
