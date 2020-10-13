@@ -1,8 +1,28 @@
 <script>
   import { onMount } from "svelte";
+  import Header from "./header.svelte";
+
+  /**
+   * The book that is currently loaded.
+   */
+  let book;
+
+  const bookProxy = {
+    listeners: [],
+    get() {
+      return book;
+    },
+    set(v) {
+      book = v;
+      this.listeners.forEach(fn => fn(book));
+    },
+    onChange(fn) {
+      this.listeners.push(fn);
+    }
+  };
 
   function main() {
-    const { epub, viewer, centralContent, initSidebar, initHeader } = window;
+    const { epub, viewer, centralContent, initSidebar } = window;
 
     const containers = {
       toc: document.querySelector("#toc"),
@@ -12,28 +32,8 @@
     const menu = document.querySelector("#menu");
     const header = document.querySelector("#header");
 
-    /**
-     * The book that is currently loaded.
-     */
-    let book;
-
-    const bookProxy = {
-      listeners: [],
-      get() {
-        return book;
-      },
-      set(v) {
-        book = v;
-        this.listeners.forEach(fn => fn(book));
-      },
-      onChange(fn) {
-        this.listeners.push(fn);
-      }
-    };
-
     centralContent(epub, viewer, containers.file, containers.text, bookProxy);
     initSidebar(bookProxy, menu, containers.toc, containers.file);
-    initHeader(header, bookProxy);
 
     containers.text.addEventListener("dblclick", function(event) {
       if (event.target.tagName.toLowerCase() !== "img") {
@@ -48,10 +48,7 @@
   });
 </script>
 
-<div id="header">
-  <span />
-  <input type="file" id="file" />
-</div>
+<Header {bookProxy} />
 <div id="menu">
   <div>
     <div id="toc" />
