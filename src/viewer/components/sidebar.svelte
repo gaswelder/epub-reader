@@ -1,11 +1,17 @@
 <script>
   import { onMount } from "svelte";
+  import Toc from "./toc.svelte";
   export let bookProxy;
 
   const initSidebar = function() {
     const menu = document.querySelector("#menu");
     const toc = document.querySelector("#toc");
     const file = document.querySelector("#file");
+
+    const tocComponent = new Toc({
+      target: toc,
+      props: { chapters: [] }
+    });
 
     /**
      * Show/hide the menu when the toggle button is pressed.
@@ -31,7 +37,9 @@
     /**
      * Refresh the table of contents when the book is loaded.
      */
-    bookProxy.onChange(renderTOC);
+    bookProxy.onChange(async () => {
+      tocComponent.$set({ chapters: await bookProxy.get().toc() });
+    });
 
     function closeMenu() {
       menu.classList.remove("open");
@@ -39,23 +47,6 @@
 
     function toggleMenu() {
       menu.classList.toggle("open");
-    }
-
-    async function renderTOC() {
-      toc.innerHTML = makeTOC(await bookProxy.get().toc());
-    }
-
-    function makeTOC(chapters) {
-      let s = "<ol>";
-      for (const c of chapters) {
-        s += `<li><a href="#${c.path()}">` + c.title() + "</a>";
-        if (c.children().length > 0) {
-          s += makeTOC(c.children());
-        }
-        s += "</li>";
-      }
-      s += "</ol>";
-      return s;
     }
   };
   onMount(initSidebar);
