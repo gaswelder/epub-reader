@@ -3,6 +3,8 @@
   import Toc from "./toc.svelte";
   export let bookProxy;
 
+  let open = false;
+
   const initSidebar = function() {
     const menu = document.querySelector("#menu");
     const toc = document.querySelector("#toc");
@@ -12,11 +14,6 @@
       target: toc,
       props: { chapters: [] }
     });
-
-    /**
-     * Show/hide the menu when the toggle button is pressed.
-     */
-    menu.querySelector("[data-toggle]").addEventListener("click", toggleMenu);
 
     /**
      * Hide the menu when a chapter is selected from it.
@@ -42,19 +39,21 @@
     });
 
     function closeMenu() {
-      menu.classList.remove("open");
-    }
-
-    function toggleMenu() {
-      menu.classList.toggle("open");
+      open = false;
     }
   };
   onMount(initSidebar);
 </script>
 
-<div id="menu">
+<div id="menu" class:open>
   <div>
     <div id="toc" />
   </div>
-  <button data-toggle>Toggle</button>
+  <button
+    data-toggle
+    on:click={() => {
+      open = !open;
+    }}>
+    Toggle
+  </button>
 </div>
