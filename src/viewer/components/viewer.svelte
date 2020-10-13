@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import Header from "./header.svelte";
+  import Sidebar from "./sidebar.svelte";
 
   /**
    * The book that is currently loaded.
@@ -22,18 +23,17 @@
   };
 
   function main() {
-    const { epub, viewer, centralContent, initSidebar } = window;
+    const { epub, viewer, centralContent } = window;
 
     const containers = {
       toc: document.querySelector("#toc"),
       text: document.querySelector("#main"),
       file: document.querySelector("#file")
     };
-    const menu = document.querySelector("#menu");
+
     const header = document.querySelector("#header");
 
     centralContent(epub, viewer, containers.file, containers.text, bookProxy);
-    initSidebar(bookProxy, menu, containers.toc, containers.file);
 
     containers.text.addEventListener("dblclick", function(event) {
       if (event.target.tagName.toLowerCase() !== "img") {
@@ -49,10 +49,5 @@
 </script>
 
 <Header {bookProxy} />
-<div id="menu">
-  <div>
-    <div id="toc" />
-  </div>
-  <button data-toggle>Toggle</button>
-</div>
+<Sidebar {bookProxy} />
 <div id="main" />
