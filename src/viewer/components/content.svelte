@@ -1,5 +1,6 @@
 <script>
   import Loader from "./loader.svelte";
+  import Text from "./text.svelte";
   import { onMount } from "svelte";
 
   export let bookProxy;
@@ -10,12 +11,12 @@
   let loadProgress = 0;
 
   let content = "";
+  let lang = "";
 
   let input = null;
 
   const centralContent = function() {
     input = document.querySelector("#file");
-    const text = document.querySelector("#main");
 
     /**
      * When a new file is selected, clear the main area and
@@ -59,34 +60,10 @@
       }
       loading = false;
 
-      text.lang = book.language();
+      lang = book.language();
 
       const css = await book.stylesheet();
       content = `<sty` + `le></style>${chaptersHTML.join("")}`;
-      makeHyphens(text);
-    }
-
-    function makeHyphens(root) {
-      if (hyphensSupported()) {
-        return;
-      }
-      for (const node of root.querySelectorAll(
-        "p, span, b, strong, em, i, blockquote"
-      )) {
-        for (const ch of node.childNodes) {
-          if (ch.nodeType != 3) {
-            continue;
-          }
-          ch.textContent = viewer.hyphenate(ch.textContent);
-        }
-      }
-    }
-
-    function hyphensSupported() {
-      return (
-        navigator.userAgent.indexOf("Firefox") > 0 &&
-        navigator.userAgent.indexOf("Chrome") < 0
-      );
     }
   };
 
@@ -104,7 +81,7 @@
   {#if loading}
     <Loader progress={loadProgress} />
   {/if}
-  {@html content}
+  <Text html={content} {lang} />
   {#if content === '' && !loading}
     <button
       on:click={() => {
