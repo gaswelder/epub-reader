@@ -63,7 +63,7 @@
       lang = book.language();
 
       const css = await book.stylesheet();
-      content = `<sty` + `le></style>${chaptersHTML.join("")}`;
+      content = `<sty` + `le>${css}</style>${chaptersHTML.join("")}`;
     }
   };
 
