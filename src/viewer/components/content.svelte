@@ -17,13 +17,6 @@
     input = document.querySelector("#file");
     const text = document.querySelector("#main");
 
-    text.addEventListener("dblclick", function(event) {
-      if (event.target.tagName.toLowerCase() !== "img") {
-        return;
-      }
-      window.open(event.target.src);
-    });
-
     /**
      * When a new file is selected, clear the main area and
      * load the selected book.
@@ -100,7 +93,14 @@
   onMount(centralContent);
 </script>
 
-<div id="main">
+<div
+  id="main"
+  on:dblclick={e => {
+    if (e.target.tagName.toLowerCase() !== 'img') {
+      return;
+    }
+    window.open(e.target.src);
+  }}>
   {#if loading}
     <Loader progress={loadProgress} />
   {/if}
