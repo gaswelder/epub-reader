@@ -1,13 +1,11 @@
 <script>
   import { onMount } from "svelte";
   import Toc from "./toc.svelte";
-  export let bookProxy;
+  export let book;
 
   let open = false;
-  let chapters = [];
 
   const initSidebar = function() {
-    const menu = document.querySelector("#menu");
     const file = document.querySelector("#file");
 
     /**
@@ -16,13 +14,6 @@
     file.addEventListener("change", function() {
       open = false;
     });
-
-    /**
-     * Refresh the table of contents when the book is loaded.
-     */
-    bookProxy.onChange(async () => {
-      chapters = await bookProxy.get().toc();
-    });
   };
   onMount(initSidebar);
 </script>
@@ -30,11 +21,19 @@
 <div id="menu" class:open>
   <div>
     <div id="toc">
-      <Toc
-        on:chapterclick={() => {
-          open = false;
-        }}
-        {chapters} />
+      {#if book}
+        {#await book.toc()}
+          loading toc
+        {:then chapters}
+          <Toc
+            on:chapterclick={() => {
+              open = false;
+            }}
+            {chapters} />
+        {:catch error}
+          <p>Error: {error}</p>
+        {/await}
+      {/if}
     </div>
   </div>
   <button
