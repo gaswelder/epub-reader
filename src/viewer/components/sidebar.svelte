@@ -1,21 +1,10 @@
 <script>
-  import { onMount } from "svelte";
+  import { createEventDispatcher } from "svelte";
   import Toc from "./toc.svelte";
   export let book;
+  export let open;
 
-  let open = false;
-
-  const initSidebar = function() {
-    const file = document.querySelector("#file");
-
-    /**
-     * Hide the menu when a new book file is chosen.
-     */
-    file.addEventListener("change", function() {
-      open = false;
-    });
-  };
-  onMount(initSidebar);
+  const dispatch = createEventDispatcher();
 </script>
 
 <div id="menu" class:open>
@@ -27,7 +16,9 @@
         {:then chapters}
           <Toc
             on:chapterclick={() => {
-              open = false;
+              if (open) {
+                dispatch('toggle');
+              }
             }}
             {chapters} />
         {:catch error}
@@ -39,7 +30,7 @@
   <button
     data-toggle
     on:click={() => {
-      open = !open;
+      dispatch('toggle');
     }}>
     Toggle
   </button>
