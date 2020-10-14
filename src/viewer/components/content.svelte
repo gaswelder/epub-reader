@@ -15,6 +15,43 @@
 
   let input = null;
 
+  async function loadBook() {
+    const data = input.files[0];
+    if (!data) {
+      return;
+    }
+
+    // No need in FileReader, the underlying library takes care of it.
+    const book = await epub.load(data);
+    bookProxy.set(book);
+
+    const chapters = book.chapters();
+    const n = chapters.length;
+    const chaptersHTML = [];
+
+    function setProgress(i) {
+      loadProgress = i / n;
+    }
+
+    loading = true;
+    for (let i = 0; i < n; i++) {
+      setProgress(i);
+      const c = chapters[i];
+      let html = await c.html();
+      html = html.replace(/id="/g, `id="${c.path()}#`);
+      html = `<a id="${c.path()}"></a>` + html;
+
+      chaptersHTML.push(html);
+      setProgress(i + 1);
+    }
+    loading = false;
+
+    lang = book.language();
+
+    const css = await book.stylesheet();
+    content = `<sty` + `le>${css}</style>${chaptersHTML.join("")}`;
+  }
+
   const centralContent = function() {
     input = document.querySelector("#file");
 
@@ -28,43 +65,6 @@
     });
 
     loadBook();
-
-    async function loadBook() {
-      const data = input.files[0];
-      if (!data) {
-        return;
-      }
-
-      // No need in FileReader, the underlying library takes care of it.
-      const book = await epub.load(data);
-      bookProxy.set(book);
-
-      const chapters = book.chapters();
-      const n = chapters.length;
-      const chaptersHTML = [];
-
-      function setProgress(i) {
-        loadProgress = i / n;
-      }
-
-      loading = true;
-      for (let i = 0; i < n; i++) {
-        setProgress(i);
-        const c = chapters[i];
-        let html = await c.html();
-        html = html.replace(/id="/g, `id="${c.path()}#`);
-        html = `<a id="${c.path()}"></a>` + html;
-
-        chaptersHTML.push(html);
-        setProgress(i + 1);
-      }
-      loading = false;
-
-      lang = book.language();
-
-      const css = await book.stylesheet();
-      content = `<sty` + `le>${css}</style>${chaptersHTML.join("")}`;
-    }
   };
 
   onMount(centralContent);
