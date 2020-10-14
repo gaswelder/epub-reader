@@ -9,6 +9,8 @@
   let loading = false;
   let loadProgress = 0;
 
+  let content = "";
+
   const centralContent = function() {
     const input = document.querySelector("#file");
     const text = document.querySelector("#main");
@@ -26,7 +28,7 @@
      * load the selected book.
      */
     input.addEventListener("change", function() {
-      text.innerHTML = "";
+      content = "";
       loadBook();
     });
 
@@ -66,9 +68,7 @@
       text.lang = book.language();
 
       const css = await book.stylesheet();
-      text.innerHTML =
-        `<style ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂=""></style>` +
-        chaptersHTML.join("");
+      content = `<sty` + `le></style>${chaptersHTML.join("")}`;
       makeHyphens(text);
     }
 
@@ -117,4 +117,5 @@
   {#if loading}
     <Loader progress={loadProgress} />
   {/if}
+  {@html content}
 </div>
