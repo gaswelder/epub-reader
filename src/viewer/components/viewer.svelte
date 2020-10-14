@@ -4,8 +4,6 @@
   import Content from "./content.svelte";
   import { onMount } from "svelte";
 
-  const { epub, viewer, centralContent } = window;
-
   /**
    * The book that is currently loaded.
    */
@@ -44,4 +42,4 @@
   on:toggle={() => {
     sidebarOpen = !sidebarOpen;
   }} />
-<Content {epub} {viewer} {bookProxy} />
+<Content {bookProxy} />

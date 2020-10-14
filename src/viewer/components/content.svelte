@@ -1,9 +1,9 @@
 <script>
   import { onMount } from "svelte";
 
-  export let epub;
-  export let viewer;
   export let bookProxy;
+
+  const { epub, viewer } = window;
 
   const centralContent = function() {
     const input = document.querySelector("#file");
@@ -71,7 +71,7 @@
 
       const css = await book.stylesheet();
       text.innerHTML =
-        `<style ✂prettier:content✂="JHtjc3N9" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂=""></style>` +
+        `<style ✂prettier:content✂="JHtjc3N9" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂=""></style>` +
         chaptersHTML.join("");
       makeHyphens(text);
     }
