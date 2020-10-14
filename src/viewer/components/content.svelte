@@ -1,9 +1,13 @@
 <script>
+  import Loader from "./loader.svelte";
   import { onMount } from "svelte";
 
   export let bookProxy;
 
   const { epub, viewer } = window;
+
+  let loading = false;
+  let loadProgress = 0;
 
   const centralContent = function() {
     const input = document.querySelector("#file");
@@ -16,10 +20,6 @@
       }
       window.open(event.target.src);
     });
-
-    const loadingStatus = document.createElement("p");
-    const loader = document.createElement("progress");
-    loader.max = 100;
 
     /**
      * When a new file is selected, clear the main area and
@@ -38,10 +38,6 @@
         return;
       }
 
-      loader.max = 100;
-      text.appendChild(loadingStatus);
-      text.appendChild(loader);
-
       // No need in FileReader, the underlying library takes care of it.
       const book = await epub.load(data);
       bookProxy.set(book);
@@ -51,11 +47,10 @@
       const chaptersHTML = [];
 
       function setProgress(i) {
-        const val = Math.round((i / n) * 100);
-        loader.value = Math.round(val);
-        loadingStatus.innerHTML = `Loading ${input.files[0].name}: ${val}%`;
+        loadProgress = i / n;
       }
 
+      loading = true;
       for (let i = 0; i < n; i++) {
         setProgress(i);
         const c = chapters[i];
@@ -66,12 +61,13 @@
         chaptersHTML.push(html);
         setProgress(i + 1);
       }
+      loading = false;
 
       text.lang = book.language();
 
       const css = await book.stylesheet();
       text.innerHTML =
-        `<style ✂prettier:content✂="JHtjc3N9" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂=""></style>` +
+        `<style ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂="" ✂prettier:content✂=""></style>` +
         chaptersHTML.join("");
       makeHyphens(text);
     }
@@ -117,4 +113,8 @@
   onMount(centralContent);
 </script>
 
-<div id="main" />
+<div id="main">
+  {#if loading}
+    <Loader progress={loadProgress} />
+  {/if}
+</div>

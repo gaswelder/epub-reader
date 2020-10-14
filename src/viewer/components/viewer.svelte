@@ -42,4 +42,4 @@
   on:toggle={() => {
     sidebarOpen = !sidebarOpen;
   }} />
-<Content {bookProxy} />
+<Content {bookProxy} {book} />
