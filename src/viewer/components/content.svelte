@@ -11,10 +11,11 @@
 
   let content = "";
 
+  let input = null;
+
   const centralContent = function() {
-    const input = document.querySelector("#file");
+    input = document.querySelector("#file");
     const text = document.querySelector("#main");
-    initCentralButton(text, input);
 
     text.addEventListener("dblclick", function(event) {
       if (event.target.tagName.toLowerCase() !== "img") {
@@ -96,20 +97,6 @@
     }
   };
 
-  function initCentralButton(text, input) {
-    const openButton = document.createElement("button");
-    openButton.innerHTML = "Open";
-    openButton.addEventListener("click", function() {
-      input.click();
-    });
-    if (input.files.length == 0) {
-      text.appendChild(openButton);
-    }
-    input.addEventListener("change", function() {
-      openButton.remove();
-    });
-  }
-
   onMount(centralContent);
 </script>
 
@@ -118,4 +105,12 @@
     <Loader progress={loadProgress} />
   {/if}
   {@html content}
+  {#if content === '' && !loading}
+    <button
+      on:click={() => {
+        input && input.click();
+      }}>
+      Open
+    </button>
+  {/if}
 </div>
