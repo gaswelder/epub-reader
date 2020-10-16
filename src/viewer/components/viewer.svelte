@@ -55,11 +55,37 @@
   });
 </script>
 
-<div id="header">
+<style>
+  .header {
+    flex: 0 0 auto;
+    height: 3em;
+    background-color: #eef;
+  }
+
+  .main {
+    flex: 1;
+    hyphens: auto;
+    background-color: white;
+    color: black;
+    padding: 2cm 3cm;
+    margin: auto;
+    font-family: georgia, serif;
+    font-size: 12pt;
+    line-height: 18pt;
+    overflow-y: scroll;
+  }
+
+  @media (max-width: 600px) {
+    .main {
+      padding: 2cm 0.5cm;
+    }
+  }
+</style>
+
+<div class="header">
   <span>{book ? book.title() : ''}</span>
   <input
     type="file"
-    id="file"
     bind:this={input}
     on:change={() => {
       sidebarOpen = false;
@@ -74,7 +100,7 @@
     sidebarOpen = !sidebarOpen;
   }} />
 <div
-  id="main"
+  class="main"
   on:dblclick={e => {
     if (e.target.tagName.toLowerCase() !== 'img') {
       return;
