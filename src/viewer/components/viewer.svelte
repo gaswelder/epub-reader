@@ -1,5 +1,4 @@
 <script>
-  import Header from "./header.svelte";
   import Sidebar from "./sidebar.svelte";
   import Loader from "./loader.svelte";
   import Text from "./text.svelte";
@@ -52,18 +51,22 @@
   }
 
   onMount(() => {
-    input = document.querySelector("#file");
-    input.addEventListener("change", function() {
-      sidebarOpen = false;
-      content = "";
-      loadBook();
-    });
-
     loadBook();
   });
 </script>
 
-<Header {book} />
+<div id="header">
+  <span>{book ? book.title() : ''}</span>
+  <input
+    type="file"
+    id="file"
+    bind:this={input}
+    on:change={() => {
+      sidebarOpen = false;
+      content = '';
+      loadBook();
+    }} />
+</div>
 <Sidebar
   {book}
   open={sidebarOpen}
