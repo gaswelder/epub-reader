@@ -8,20 +8,7 @@
   font-weight: bold;
   font-size: 11pt;
 }
-#toc ol {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-}
+
 #toc ol ol {
   margin-left: 1.5em;
-}
-#toc li {
-  margin: 1em 0;
-  color: #d8def0;
-  font-family: sans-serif;
-}
-#toc a {
-  text-decoration: none;
-  color: inherit;
 }
