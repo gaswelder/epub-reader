@@ -21,7 +21,7 @@
     }
 
     // No need in FileReader, the underlying library takes care of it.
-    const book = await epub.load(data);
+    book = await epub.load(data);
 
     const chapters = book.chapters();
     const n = chapters.length;
