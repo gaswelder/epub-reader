@@ -4,25 +4,51 @@
   import Content from "./content.svelte";
   import { onMount } from "svelte";
 
-  /**
-   * The book that is currently loaded.
-   */
+  const { epub, viewer } = window;
+
   let book;
   let sidebarOpen = false;
+  let input = null;
+  let loading = false;
+  let loadProgress = 0;
+  let content = "";
+  let lang = "";
 
-  const bookProxy = {
-    listeners: [],
-    get() {
-      return book;
-    },
-    set(v) {
-      book = v;
-      this.listeners.forEach(fn => fn(book));
-    },
-    onChange(fn) {
-      this.listeners.push(fn);
+  async function loadBook() {
+    const data = input.files[0];
+    if (!data) {
+      return;
     }
-  };
+
+    // No need in FileReader, the underlying library takes care of it.
+    const book = await epub.load(data);
+
+    const chapters = book.chapters();
+    const n = chapters.length;
+    const chaptersHTML = [];
+
+    function setProgress(i) {
+      loadProgress = i / n;
+    }
+
+    loading = true;
+    for (let i = 0; i < n; i++) {
+      setProgress(i);
+      const c = chapters[i];
+      let html = await c.html();
+      html = html.replace(/id="/g, `id="${c.path()}#`);
+      html = `<a id="${c.path()}"></a>` + html;
+
+      chaptersHTML.push(html);
+      setProgress(i + 1);
+    }
+    loading = false;
+
+    lang = book.language();
+
+    const css = await book.stylesheet();
+    content = `<sty` + `le>${css}</style>${chaptersHTML.join("")}`;
+  }
 
   onMount(() => {
     /**
@@ -32,6 +58,19 @@
     file.addEventListener("change", function() {
       sidebarOpen = false;
     });
+
+    input = file;
+
+    /**
+     * When a new file is selected, clear the main area and
+     * load the selected book.
+     */
+    input.addEventListener("change", function() {
+      content = "";
+      loadBook();
+    });
+
+    loadBook();
   });
 </script>
 
@@ -42,4 +81,11 @@
   on:toggle={() => {
     sidebarOpen = !sidebarOpen;
   }} />
-<Content {bookProxy} {book} />
+<Content
+  {loading}
+  {loadProgress}
+  {content}
+  {lang}
+  on:openclick={() => {
+    input && input.click();
+  }} />
