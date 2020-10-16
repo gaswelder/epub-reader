@@ -1,7 +1,8 @@
 <script>
   import Header from "./header.svelte";
   import Sidebar from "./sidebar.svelte";
-  import Content from "./content.svelte";
+  import Loader from "./loader.svelte";
+  import Text from "./text.svelte";
   import { onMount } from "svelte";
 
   const { epub, viewer } = window;
@@ -81,11 +82,24 @@
   on:toggle={() => {
     sidebarOpen = !sidebarOpen;
   }} />
-<Content
-  {loading}
-  {loadProgress}
-  {content}
-  {lang}
-  on:openclick={() => {
-    input && input.click();
-  }} />
+<div
+  id="main"
+  on:dblclick={e => {
+    if (e.target.tagName.toLowerCase() !== 'img') {
+      return;
+    }
+    window.open(e.target.src);
+  }}>
+  {#if loading}
+    <Loader progress={loadProgress} />
+  {/if}
+  <Text html={content} {lang} />
+  {#if content === '' && !loading}
+    <button
+      on:click={() => {
+        input && input.click();
+      }}>
+      Open
+    </button>
+  {/if}
+</div>
