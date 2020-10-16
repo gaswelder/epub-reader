@@ -52,21 +52,9 @@
   }
 
   onMount(() => {
-    /**
-     * Hide the menu when a new book file is chosen.
-     */
-    const file = document.querySelector("#file");
-    file.addEventListener("change", function() {
-      sidebarOpen = false;
-    });
-
-    input = file;
-
-    /**
-     * When a new file is selected, clear the main area and
-     * load the selected book.
-     */
+    input = document.querySelector("#file");
     input.addEventListener("change", function() {
+      sidebarOpen = false;
       content = "";
       loadBook();
     });
