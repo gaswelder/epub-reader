@@ -1,37 +1,51 @@
 <script>
+  import { onMount } from "svelte";
   export let lang;
   export let html;
+  export let selectedChapter;
 
-  function hyphensSupported() {
-    return (
-      navigator.userAgent.indexOf("Firefox") > 0 &&
-      navigator.userAgent.indexOf("Chrome") < 0
-    );
-  }
-
-  function makeHyphens(root) {
-    if (!root) {
-      return;
-    }
-    if (hyphensSupported()) {
-      return;
-    }
-    for (const node of root.querySelectorAll(
-      "p, span, b, strong, em, i, blockquote"
-    )) {
-      for (const ch of node.childNodes) {
-        if (ch.nodeType != 3) {
-          continue;
-        }
-        ch.textContent = viewer.hyphenate(ch.textContent);
-      }
-    }
-  }
-
+  let iframe;
   let root;
-  $: makeHyphens(root);
+
+  const showImage = e => {
+    console.log(e.target.tagName);
+    if (e.target.tagName.toLowerCase() !== "img") {
+      return;
+    }
+    window.open(e.target.src);
+  };
+
+  const setHtml = html => {
+    if (!iframe) {
+      return;
+    }
+    const body = iframe.contentDocument.body;
+    body.innerHTML = html;
+    body.lang = lang;
+    body.style = "hyphens: auto";
+
+    // because can't set the listener once on mount (gets ignored)
+    body.removeEventListener("dblclick", showImage);
+    body.addEventListener("dblclick", showImage);
+  };
+
+  const selectChapter = path => {
+    if (!iframe) {
+      return;
+    }
+    iframe.contentWindow.location.hash = "#" + path;
+  };
+
+  $: setHtml(html);
+  $: selectChapter(selectedChapter);
 </script>
 
-<div {lang} bind:this={root}>
-  {@html html}
-</div>
+<style>
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+</style>
+
+<iframe bind:this={iframe} title="Book content" />

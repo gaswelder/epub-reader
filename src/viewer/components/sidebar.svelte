@@ -60,10 +60,8 @@
           loading toc
         {:then chapters}
           <Toc
-            on:chapterclick={() => {
-              if (open) {
-                dispatch('toggle');
-              }
+            on:chapterclick={e => {
+              dispatch('chapterclick', e.detail);
             }}
             {chapters} />
         {:catch error}

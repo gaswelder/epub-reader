@@ -13,6 +13,7 @@
   let loadProgress = 0;
   let content = "";
   let lang = "";
+  let selectedChapter;
 
   async function loadBook() {
     const data = input.files[0];
@@ -63,22 +64,11 @@
   }
 
   .main {
-    flex: 1;
-    hyphens: auto;
-    background-color: white;
-    color: black;
-    padding: 2cm 3cm;
-    margin: auto;
-    font-family: georgia, serif;
-    font-size: 12pt;
-    line-height: 18pt;
-    overflow-y: scroll;
-  }
-
-  @media (max-width: 600px) {
-    .main {
-      padding: 2cm 0.5cm;
-    }
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 3em;
+    height: calc(100vh - 3em);
   }
 </style>
 
@@ -98,19 +88,16 @@
   open={sidebarOpen}
   on:toggle={() => {
     sidebarOpen = !sidebarOpen;
+  }}
+  on:chapterclick={e => {
+    sidebarOpen = false;
+    selectedChapter = e.detail.chapter.path();
   }} />
-<div
-  class="main"
-  on:dblclick={e => {
-    if (e.target.tagName.toLowerCase() !== 'img') {
-      return;
-    }
-    window.open(e.target.src);
-  }}>
+<div class="main">
   {#if loading}
     <Loader progress={loadProgress} />
   {/if}
-  <Text html={content} {lang} />
+  <Text html={content} {lang} {selectedChapter} />
   {#if content === '' && !loading}
     <button
       on:click={() => {
