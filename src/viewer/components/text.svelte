@@ -3,6 +3,7 @@
   export let lang;
   export let html;
   export let selectedChapter;
+  export let css;
 
   let iframe;
   let root;
@@ -15,12 +16,12 @@
     window.open(e.target.src);
   };
 
-  const setHtml = html => {
+  const setHtml = (html, css) => {
     if (!iframe) {
       return;
     }
     const body = iframe.contentDocument.body;
-    body.innerHTML = html;
+    body.innerHTML = `<sty` + `le>${css}</style>` + html;
     body.lang = lang;
     body.style = "hyphens: auto";
 
@@ -36,7 +37,7 @@
     iframe.contentWindow.location.hash = "#" + path;
   };
 
-  $: setHtml(html);
+  $: setHtml(html, css);
   $: selectChapter(selectedChapter);
 </script>
 

@@ -14,6 +14,19 @@
   let content = "";
   let lang = "";
   let selectedChapter;
+  let css = "";
+  let addUserCss = true;
+
+  const userCss = `
+  body {
+    max-width: 48em;
+    margin: auto;
+  }
+  p {
+    font-size: 16px !important;
+    line-height: 24px !important;
+  }
+  `;
 
   async function loadBook() {
     const data = input.files[0];
@@ -47,8 +60,8 @@
 
     lang = book.language();
 
-    const css = await book.stylesheet();
-    content = `<sty` + `le>${css}</style>${chaptersHTML.join("")}`;
+    css = await book.stylesheet();
+    content = chaptersHTML.join("");
   }
 
   onMount(() => {
@@ -82,6 +95,15 @@
       content = '';
       loadBook();
     }} />
+  <label>
+    <input
+      type="checkbox"
+      checked={addUserCss}
+      on:change={e => {
+        addUserCss = e.target.checked;
+      }} />
+    Add user CSS
+  </label>
 </div>
 <Sidebar
   {book}
@@ -97,7 +119,11 @@
   {#if loading}
     <Loader progress={loadProgress} />
   {/if}
-  <Text html={content} {lang} {selectedChapter} />
+  <Text
+    html={content}
+    {lang}
+    {selectedChapter}
+    css={addUserCss ? css + userCss : css} />
   {#if content === '' && !loading}
     <button
       on:click={() => {
