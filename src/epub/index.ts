@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import * as xml2js from "xml2js";
-import Manifest from "./opf/Root";
+import Manifest from "./opf";
 import { ZipNode } from "./ZipNode";
 
 /**
