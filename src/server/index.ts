@@ -1,7 +1,7 @@
 import fs from "fs";
 import express from "express";
 
-const Book = require("../epub");
+const Book = require("../../tmp/epub");
 
 const EpubDir = process.argv[2] || ".";
 

@@ -1,35 +1,38 @@
 const assert = require("assert");
 const fs = require("fs");
-const Book = require(".");
+import { AwaitKeyword } from "typescript";
+import { load } from ".";
 
 init();
 async function init() {
-  const samples = fs.readdirSync("samples/").filter(x => x.endsWith(".epub"));
-  const books = await Promise.all(
-    samples.map(name => Book.load(fs.readFileSync(`samples/${name}`)))
+  const samples = fs.readdirSync("samples/").filter((x) => x.endsWith(".epub"));
+  type Await<T> = T extends PromiseLike<infer U> ? U : T;
+  type Book = Await<ReturnType<typeof load>>;
+  const books: Book[] = await Promise.all(
+    samples.map((name) => load(fs.readFileSync(`samples/${name}`)))
   );
 
-  samples.forEach(function(name, i) {
-    describe("book: " + name, function() {
+  samples.forEach(function (name, i) {
+    describe("book: " + name, function () {
       const book = books[i];
-      it("title", function() {
+      it("title", function () {
         const title = book.title();
         assert.equal(typeof title, "string", "title is not a string");
         assert.ok(title, "empty title");
       });
 
-      it("language", function() {
+      it("language", function () {
         const lang = book.language();
         assert.equal(typeof lang, "string");
         assert.ok(lang);
       });
 
-      it("cover", async function() {
+      it("cover", async function () {
         const cover = await book.cover();
         assert.ok(cover.type == "image/jpeg" || cover.type == "image/png");
       });
 
-      it("chapters", async function() {
+      it("chapters", async function () {
         const chapters = book.chapters();
         assert.ok(Array.isArray(chapters), "chapters is not an array");
         assert.ok(chapters.length > 0, "no chapters");
@@ -40,12 +43,12 @@ async function init() {
         }
       });
 
-      it("returns the stylesheet", async function() {
+      it("returns the stylesheet", async function () {
         const css = await book.stylesheet();
         assert.ok(css.length > 0);
       });
 
-      it("toc", async function() {
+      it("toc", async function () {
         function TOC(toc, indent = "  ") {
           let s = "";
           for (const t of toc) {
