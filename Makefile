@@ -8,6 +8,3 @@ epub-web: epub-node
 
 ui:
 	yarn rollup -c rollup.config.js
-
-serve: epub-node epub-web ui
-	yarn nodemon src/server/index.ts samples
