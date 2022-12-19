@@ -71,8 +71,7 @@ export const load = async (src: any) => {
       const imgNode = indexNode.locate(item.$.href);
       return {
         type: item.$["media-type"],
-        data: () => imgNode.data(),
-        buffer: () => imgNode.data("nodebuffer"),
+        b64: () => imgNode.data("base64"),
       };
     },
 

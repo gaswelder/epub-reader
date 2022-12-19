@@ -56,6 +56,12 @@
     const chapters = book.chapters();
     const n = chapters.length;
     const chaptersHTML = [];
+
+    const cover = await book.cover();
+    chaptersHTML.push(
+      `<img src="data:${cover.type};base64,${await cover.b64()}" alt="cover">`
+    );
+
     function setProgress(i) {
       loadProgress = i / n;
     }
@@ -84,11 +90,7 @@
 
 <div class="header">
   <span>{book ? book.title() : ""}</span>
-  <input
-    type="file"
-    bind:this={input}
-    on:change={loadBook}
-  />
+  <input type="file" bind:this={input} on:change={loadBook} />
   <label>
     <input type="checkbox" bind:checked={addUserCss} />
     Add user CSS
