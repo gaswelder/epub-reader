@@ -6,12 +6,7 @@ const isImage = (ch: any) => ch.name == "img" || ch.name == "image";
 
 export function Chapter(indexNode: any, href: string, manifest_: any) {
   const zipNode = indexNode.locate(href);
-  function findItem(condition: any) {
-    return manifest_.item.find(condition);
-  }
-  function fullpath(p: any) {
-    return indexNode.locate(p).path();
-  }
+
   /**
    * Returns contents of the chapter as a list of elements.
    */
@@ -26,7 +21,7 @@ export function Chapter(indexNode: any, href: string, manifest_: any) {
       const href = image.attr[hrefAttr];
       const imageNode = zipNode.locate(href);
       const imagePath = imageNode.path();
-      const item = findItem((i: any) => fullpath(i.$.href) == imagePath);
+      const item = manifest_.item.find((i: any) => indexNode.locate(i.$.href).path() == imagePath);
       if (!item) {
         throw new Error("couldn't find image " + imagePath);
       }
