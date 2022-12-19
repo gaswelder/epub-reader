@@ -1,13 +1,12 @@
 <script>
-  import Sidebar from "./sidebar.svelte";
   import Loader from "./loader.svelte";
   import Text from "./text.svelte";
   import { onMount } from "svelte";
+  import Toc from "./toc.svelte";
 
   const { epub, viewer } = window;
 
   let book;
-  let sidebarOpen = false;
   let input = null;
   let loading = false;
   let loadProgress = 0;
@@ -43,40 +42,33 @@
   };
 
   async function loadBook() {
+    content = "";
     const data = input.files[0];
     if (!data) {
       return;
     }
-
-    // No need in FileReader, the underlying library takes care of it.
+    loading = true;
     book = await epub.load(data);
-
     const chapters = book.chapters();
     const n = chapters.length;
     const chaptersHTML = [];
-
     function setProgress(i) {
       loadProgress = i / n;
     }
-
-    loading = true;
     for (let i = 0; i < n; i++) {
       setProgress(i);
       const c = chapters[i];
       let html = await c.html();
       html = html.replace(/id="/g, `id="${c.path()}#`);
       html = `<a id="${c.path()}"></a>` + html;
-
       chaptersHTML.push(html);
       setProgress(i + 1);
     }
     loading = false;
-
     lang = book.language();
     if (lang === "eng") {
       lang = "en";
     }
-
     css = await book.stylesheet();
     content = chaptersHTML.join("");
   }
@@ -86,32 +78,13 @@
   });
 </script>
 
-<style>
-  .header {
-    flex: 0 0 auto;
-    height: 3em;
-    background-color: #eef;
-  }
-
-  .main {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 3em;
-    height: calc(100vh - 3em);
-  }
-</style>
-
 <div class="header">
-  <span>{book ? book.title() : ''}</span>
+  <span>{book ? book.title() : ""}</span>
   <input
     type="file"
     bind:this={input}
-    on:change={() => {
-      sidebarOpen = false;
-      content = '';
-      loadBook();
-    }} />
+    on:change={loadBook}
+  />
   <label>
     <input type="checkbox" bind:checked={addUserCss} />
     Add user CSS
@@ -121,31 +94,67 @@
     Justify
   </label>
 </div>
-<Sidebar
-  {book}
-  open={sidebarOpen}
-  on:toggle={() => {
-    sidebarOpen = !sidebarOpen;
-  }}
-  on:chapterclick={e => {
-    sidebarOpen = false;
-    selectedChapter = e.detail.chapter.path();
-  }} />
-<div class="main">
-  {#if loading}
-    <Loader progress={loadProgress} />
-  {/if}
-  <Text
-    html={content}
-    {lang}
-    {selectedChapter}
-    css={getCss(css, addUserCss, justify)} />
-  {#if content === '' && !loading}
-    <button
-      on:click={() => {
-        input && input.click();
-      }}>
-      Open
-    </button>
-  {/if}
+<div class="t">
+  <div class="toc">
+    {#if book}
+      {#await book.toc()}
+        loading toc
+      {:then chapters}
+        <Toc
+          on:chapterclick={(e) => {
+            selectedChapter = e.detail.chapter.path();
+          }}
+          {chapters}
+        />
+      {:catch error}
+        <p>Error: {error}</p>
+      {/await}
+    {/if}
+  </div>
+  <div class="main">
+    {#if loading}
+      <Loader progress={loadProgress} />
+    {:else if content === ""}
+      <button
+        on:click={() => {
+          input && input.click();
+        }}
+      >
+        Open
+      </button>
+    {:else}
+      <Text
+        html={content}
+        {lang}
+        {selectedChapter}
+        css={getCss(css, addUserCss, justify)}
+      />
+    {/if}
+  </div>
 </div>
+
+<style>
+  .header {
+    flex: 0 0 auto;
+    height: 3em;
+    background-color: #eef;
+  }
+  .t {
+    display: flex;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 5px;
+    top: 50px;
+  }
+  .toc {
+    flex-basis: 20em;
+    overflow: scroll;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-right: dotted 1px gray;
+  }
+  .main {
+    flex: 1;
+  }
+</style>

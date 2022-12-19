@@ -1,15 +1,12 @@
 <script>
-  import { onMount } from "svelte";
   export let lang;
   export let html;
   export let selectedChapter;
   export let css;
 
   let iframe;
-  let root;
 
-  const showImage = e => {
-    console.log(e.target.tagName);
+  const showImage = (e) => {
     if (e.target.tagName.toLowerCase() !== "img") {
       return;
     }
@@ -18,6 +15,7 @@
 
   const setHtml = (html, css) => {
     if (!iframe) {
+      console.log(`content iframe is missing`);
       return;
     }
     const body = iframe.contentDocument.body;
@@ -30,7 +28,7 @@
     body.addEventListener("dblclick", showImage);
   };
 
-  const selectChapter = path => {
+  const selectChapter = (path) => {
     if (!iframe) {
       return;
     }
@@ -41,6 +39,10 @@
   $: selectChapter(selectedChapter);
 </script>
 
+<iframe on:load={() => {
+  setHtml(html, css);
+}} bind:this={iframe} title="Book content" />
+
 <style>
   iframe {
     width: 100%;
@@ -48,5 +50,3 @@
     border: none;
   }
 </style>
-
-<iframe bind:this={iframe} title="Book content" />

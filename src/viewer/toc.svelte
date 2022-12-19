@@ -11,8 +11,10 @@
     color: inherit;
   }
   li {
-    margin: 1em 0;
-    color: #d8def0;
+    margin: 0;
+    margin-bottom: 7px;
+    font-size: 14px;
+    color: #248;
     font-family: sans-serif;
   }
   ol {
