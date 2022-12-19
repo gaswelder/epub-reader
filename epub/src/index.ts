@@ -1,5 +1,4 @@
 import JSZip from "jszip";
-import xmldoc from "xmldoc";
 import toHTML from "./html";
 import xml from "./xml";
 import { Z, ZipNode } from "./ZipNode";
@@ -42,21 +41,28 @@ type PackageData = {
 export const load = async (src: any) => {
   const zip = await new JSZip().loadAsync(src);
   const z = Z(zip);
-  const containerData = await z.locate("META-INF/container.xml").xml();
-  const rootFile = containerData.container.rootfiles[0].rootfile[0];
-  if (rootFile.$["media-type"] != "application/oebps-package+xml") {
+
+  // Go to container.xml and find out where the index file is.
+  const containerDoc = await z.locate("META-INF/container.xml").xmldoc();
+  const rootfile = containerDoc.descendantWithPath("rootfiles.rootfile");
+  if (!rootfile) {
+    throw new Error(`couldn't get rootfile from container.xml`);
+  }
+  if (rootfile.attr["media-type"] != "application/oebps-package+xml") {
     throw new Error(
-      "Expected 'application/oebps-package+xml, got " + rootFile.$["media-type"]
+      "Expected rootfile with media type application/oebps-package+xml, got " +
+        rootfile.attr["media-type"]
     );
   }
-  const indexPath = rootFile.$["full-path"];
-  const indexNode = ZipNode(zip, indexPath);
+  const indexPath = rootfile.attr["full-path"];
+  const indexDoc = await z.locate(indexPath).xmldoc();
 
   const packageData = (await z.locate(indexPath).xml()) as PackageData;
   // The manifest is the list of all files.
   const manifestItem = packageData.package.manifest[0];
 
   const metadata = packageData.package.metadata[0];
+  const indexNode = ZipNode(zip, indexPath);
 
   return {
     cover: function () {
@@ -93,8 +99,7 @@ export const load = async (src: any) => {
            * Returns contents of the chapter as HTML string.
            */
           html: async function () {
-            const str = await zipNode.data("string");
-            const doc = new xmldoc.XmlDocument(str.toString());
+            const doc = await zipNode.xmldoc();
             for (const image of xml.find(
               doc,
               (ch: any) => ch.name == "img" || ch.name == "image"

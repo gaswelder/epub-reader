@@ -1,6 +1,7 @@
 import JSZip from "jszip";
 import * as path from "path";
 import * as xml2js from "xml2js";
+import xmldoc from "xmldoc";
 
 export const Z = (zip: JSZip) => {
   return {
@@ -21,14 +22,14 @@ export function ZipNode(zip: JSZip, nodePath: string) {
       return ZipNode(zip, targetPath);
     },
     data: function (type: "string" | "nodebuffer" | "base64" = "string") {
-      const file = zip.file(nodePath);
-      if (!file) {
-        throw new Error(`file "${nodePath}" not found`);
-      }
       return file.async(type);
     },
     async xml() {
       return xml2js.parseStringPromise(await file.async("string"));
+    },
+    async xmldoc() {
+      const str = await file.async("string");
+      return new xmldoc.XmlDocument(str);
     },
     path: function () {
       return nodePath;
