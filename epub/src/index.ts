@@ -20,33 +20,53 @@ export const load = async (src: any) => {
   const indexNode = ZipNode(zip, indexPath);
 
   const manifestData = await z.locate(indexPath).xml();
-  const manifest = new Manifest(indexNode, manifestData);
-  const ncx = manifest.ncx();
+  // The manifest is the list of all files.
+  const manifest1 = new Manifest(indexNode, manifestData.package.manifest[0]);
+
   return {
-    cover: manifest.cover,
+    cover: function () {
+      if (!manifestData.package.metadata[0].meta) return null;
+      const meta = manifestData.package.metadata[0].meta.find(
+        (m: any) => m.$.name == "cover"
+      );
+      if (!meta) return null;
+      const id = meta.$.content;
+      return manifest1.imageById(id);
+    },
+
+    chapters: function () {
+      const refs = manifestData.package.spine[0].itemref;
+      return refs.map(function (ref: any) {
+        const id = ref.$.idref;
+        return manifest1.chapterById(id);
+      });
+    },
     /**
      * Returns the book's table of contents
      * as a list of navigation pointer objects.
      */
-    toc: ncx.list,
+    toc: manifest1.ncx().list,
 
     /**
      * Returns the book's title.
      */
-    title: manifest.title,
+    title: function () {
+      const meta = manifestData.package.metadata[0];
+      if (!meta["dc:title"]) {
+        return null;
+      }
+      return getString(meta["dc:title"][0]);
+    },
 
     /**
-     * Returns the book't language.
+     * Returns the book's language.
      */
-    language: manifest.language,
-
-    /**
-     * Returns the list of the book's chapters.
-     */
-    chapters: manifest.chapters,
+    language: function () {
+      return getString(manifestData.package.metadata[0]["dc:language"][0]);
+    },
 
     stylesheet: async function () {
-      const nodes = manifest.stylesheets();
+      const nodes = manifest1.stylesheets();
       let css = "";
       for (const node of nodes) {
         css += await node.data("string");
@@ -56,3 +76,11 @@ export const load = async (src: any) => {
     },
   };
 };
+
+function getString(node: any) {
+  if (typeof node == "object") {
+    return node._;
+  } else {
+    return node;
+  }
+}
