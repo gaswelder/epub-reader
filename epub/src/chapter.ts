@@ -2,31 +2,16 @@ const xml = require("./xml");
 const xmldoc = require("xmldoc");
 const toHTML = require("./html");
 
-const isImage = (ch) => ch.name == "img" || ch.name == "image";
+const isImage = (ch: any) => ch.name == "img" || ch.name == "image";
 
-function Chapter(indexNode, href, manifest_) {
+export function Chapter(indexNode: any, href: string, manifest_: any) {
   const zipNode = indexNode.locate(href);
-  function findItem(condition) {
+  function findItem(condition: any) {
     return manifest_.item.find(condition);
   }
-  function fullpath(p) {
+  function fullpath(p: any) {
     return indexNode.locate(p).path();
   }
-  /**
-   * Returns contents of the chapter as HTML string.
-   */
-  this.html = async function () {
-    const elements = await read();
-    return elements.map(toHTML).join("");
-  };
-
-  /**
-   * Returns the chapter's archive path.
-   */
-  this.path = function () {
-    return zipNode.path();
-  };
-
   /**
    * Returns contents of the chapter as a list of elements.
    */
@@ -41,7 +26,7 @@ function Chapter(indexNode, href, manifest_) {
       const href = image.attr[hrefAttr];
       const imageNode = zipNode.locate(href);
       const imagePath = imageNode.path();
-      const item = findItem((i) => fullpath(i.$.href) == imagePath);
+      const item = findItem((i: any) => fullpath(i.$.href) == imagePath);
       if (!item) {
         throw new Error("couldn't find image " + imagePath);
       }
@@ -54,6 +39,21 @@ function Chapter(indexNode, href, manifest_) {
     elements.push(...body.children);
     return elements;
   }
-}
 
-module.exports = { Chapter };
+  return {
+    /**
+     * Returns contents of the chapter as HTML string.
+     */
+    html: async function () {
+      const elements = await read();
+      return elements.map(toHTML).join("");
+    },
+
+    /**
+     * Returns the chapter's archive path.
+     */
+    path: function () {
+      return zipNode.path();
+    },
+  };
+}

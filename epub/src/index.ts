@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { Chapter } from "./opf";
+import { Chapter } from "./chapter";
 import { Z, ZipNode } from "./ZipNode";
 
 /**
@@ -49,7 +49,7 @@ export const load = async (src: any) => {
       return refs.map(function (ref: any) {
         const id = ref.$.idref;
         const item = manifest_.item.find((i: any) => i.$.id == id);
-        return new Chapter(indexNode, item.$.href, manifest_);
+        return Chapter(indexNode, item.$.href, manifest_);
       });
     },
     /**
