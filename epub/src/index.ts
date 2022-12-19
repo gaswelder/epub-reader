@@ -4,27 +4,6 @@ import toHTML from "./html";
 import xml from "./xml";
 import { Z, ZipNode } from "./ZipNode";
 
-type PackageData = {
-  package: {
-    spine: {
-      itemref: {
-        $: {
-          idref: string;
-        };
-      }[];
-    }[];
-    manifest: {
-      item: {
-        $: {
-          id: string;
-          href: string;
-          ["media-type"]: string;
-        };
-      }[];
-    }[];
-  };
-};
-
 /**
  * Reads the given source and returns a book object.
  * The source is whatever can be read by JSZip.
@@ -48,11 +27,30 @@ export const load = async (src: any) => {
   const indexPath = rootfile.attr["full-path"];
   const indexDoc = await z.locate(indexPath).xmldoc();
 
-  const packageData = (await z.locate(indexPath).xml()) as PackageData;
-  // The manifest is the list of all files.
-  const manifestItem = packageData.package.manifest[0];
+  // Get the manifest - the list of all files in the package.
+  const manifest = indexDoc
+    .childNamed("manifest")
+    ?.childrenNamed("item")
+    .map((node) => {
+      return {
+        id: node.attr.id,
+        href: node.attr.href,
+        type: node.attr["media-type"],
+      };
+    });
+  if (!manifest) {
+    throw new Error(`couldn't read the manifest`);
+  }
 
-  // const metadata = packageData.package.metadata[0];
+  // Get the spine - the ordered list of chapter file ids.
+  const spine = indexDoc
+    .childNamed("spine")
+    ?.childrenNamed("itemref")
+    .map((node) => node.attr.idref);
+  if (!spine) {
+    throw new Error(`couldn't read the spine`);
+  }
+
   const indexNode = ZipNode(zip, indexPath);
 
   return {
@@ -64,24 +62,24 @@ export const load = async (src: any) => {
         return null;
       }
       const coverImageId = coverMeta.attr.content;
-      const item = manifestItem.item.find((i) => i.$.id == coverImageId);
+      const item = manifest.find((x) => x.id == coverImageId);
       if (!item) {
         throw new Error(`couldn't find item "${coverImageId}"`);
       }
-      const imgNode = indexNode.locate(item.$.href);
+      const imgNode = indexNode.locate(item.href);
       return {
-        type: item.$["media-type"],
+        type: item.type,
         b64: () => imgNode.data("base64"),
       };
     },
 
     chapters: function () {
-      return packageData.package.spine[0].itemref.map(function (ref) {
-        const item = manifestItem.item.find((i) => i.$.id == ref.$.idref);
+      return spine.map(function (id) {
+        const item = manifest.find((x) => x.id == id);
         if (!item) {
-          throw new Error(`couldn't find item "${ref.$.idref}"`);
+          throw new Error(`couldn't find spine item "${id}"`);
         }
-        const zipNode = indexNode.locate(item.$.href);
+        const zipNode = indexNode.locate(item.href);
 
         return {
           /**
@@ -100,17 +98,15 @@ export const load = async (src: any) => {
               const href = image.attr[hrefAttr];
               const imageNode = zipNode.locate(href);
               const imagePath = imageNode.path();
-              const item = manifestItem.item.find(
-                (i) => indexNode.locate(i.$.href).path() == imagePath
+              const item = manifest.find(
+                (x) => indexNode.locate(x.href).path() == imagePath
               );
               if (!item) {
                 throw new Error("couldn't find image " + imagePath);
               }
-              const imgNode = indexNode.locate(item.$.href);
+              const imgNode = indexNode.locate(item.href);
               const img64 = await imgNode.data("base64");
-              image.attr[
-                hrefAttr
-              ] = `data:${item.$["media-type"]};base64,${img64}`;
+              image.attr[hrefAttr] = `data:${item.type};base64,${img64}`;
             }
             const elements = [];
             const body = doc.childNamed("body");
@@ -135,13 +131,11 @@ export const load = async (src: any) => {
      * as a list of navigation pointer objects.
      */
     toc: async () => {
-      const item = manifestItem.item.find(
-        (i) => i.$["media-type"] == "application/x-dtbncx+xml"
-      );
+      const item = manifest.find((x) => x.type == "application/x-dtbncx+xml");
       if (!item) {
         throw new Error("couldn't find NCX item in the manifest");
       }
-      const ncxNode = indexNode.locate(item.$.href);
+      const ncxNode = indexNode.locate(item.href);
       function parsePoints(root: navpoint[]) {
         return root.map(function (p) {
           return {
@@ -184,9 +178,9 @@ export const load = async (src: any) => {
     },
 
     stylesheet: async function () {
-      const nodes = manifestItem.item
-        .filter((i) => i.$["media-type"] == "text/css")
-        .map((i) => indexNode.locate(i.$.href));
+      const nodes = manifest
+        .filter((x) => x.type == "test/css")
+        .map((x) => indexNode.locate(x.href));
       let css = "";
       for (const node of nodes) {
         css += await node.data("string");
