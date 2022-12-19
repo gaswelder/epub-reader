@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { Image, Chapter } from "./opf";
+import { Chapter } from "./opf";
 import { Z, ZipNode } from "./ZipNode";
 
 /**
@@ -36,7 +36,12 @@ export const load = async (src: any) => {
       }
       const id = meta.$.content;
       const item = manifest_.item.find((i: any) => i.$.id == id);
-      return new Image(item, indexNode.locate(item.$.href));
+      const imgNode = indexNode.locate(item.$.href);
+      return {
+        type: item.$["media-type"],
+        data: () => imgNode.data(),
+        buffer: () => imgNode.data("nodebuffer"),
+      };
     },
 
     chapters: function () {

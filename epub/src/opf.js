@@ -2,12 +2,6 @@ const xml = require("./xml");
 const xmldoc = require("xmldoc");
 const toHTML = require("./html");
 
-function Image(manifestItem, zipNode) {
-  this.type = manifestItem.$["media-type"];
-  this.data = zipNode.data.bind(zipNode);
-  this.buffer = () => this.data("nodebuffer");
-}
-
 const isImage = (ch) => ch.name == "img" || ch.name == "image";
 
 function Chapter(indexNode, href, manifest_) {
@@ -51,10 +45,9 @@ function Chapter(indexNode, href, manifest_) {
       if (!item) {
         throw new Error("couldn't find image " + imagePath);
       }
-      const img = new Image(item, indexNode.locate(item.$.href));
-      const { type } = img;
-      const img64 = await img.data("base64");
-      image.attr[hrefAttr] = dataURI(img64, type);
+      const imgNode = indexNode.locate(item.$.href);
+      const img64 = await imgNode.data("base64");
+      image.attr[hrefAttr] = `data:${item.$["media-type"]};base64,${img64}`;
     }
     const elements = [];
     const body = doc.childNamed("body");
@@ -63,14 +56,4 @@ function Chapter(indexNode, href, manifest_) {
   }
 }
 
-/**
- * Returns data URI for a file.
- *
- * @param {string} data base-64 encoded file contents
- * @param {string} type MIME type
- */
-function dataURI(data, type) {
-  return `data:${type};base64,${data}`;
-}
-
-module.exports = { Image, Chapter };
+module.exports = { Chapter };
