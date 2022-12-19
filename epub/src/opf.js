@@ -14,19 +14,6 @@ function Manifest(indexNode, manifest_) {
     }
     return new Image(item, indexNode.locate(item.$.href));
   };
-
-  this.imageById = function (id) {
-    const item = manifest_.item.find((i) => i.$.id == id);
-    return new Image(item, indexNode.locate(item.$.href));
-  };
-
-  const _this = this;
-
-  this.chapterById = function (id) {
-    const item = manifest_.item.find((i) => i.$.id == id);
-    return new Chapter(indexNode.locate(item.$.href), _this);
-  };
-
   function fullpath(p) {
     return indexNode.locate(p).path();
   }
@@ -99,4 +86,4 @@ function dataURI(data, type) {
   return `data:${type};base64,${data}`;
 }
 
-module.exports = { Manifest }
+module.exports = { Manifest, Image, Chapter }

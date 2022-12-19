@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { Manifest } from "./opf";
+import { Manifest, Image, Chapter } from "./opf";
 import { Z, ZipNode } from "./ZipNode";
 
 /**
@@ -36,14 +36,16 @@ export const load = async (src: any) => {
         return null;
       }
       const id = meta.$.content;
-      return manifest1.imageById(id);
+      const item = manifest_.item.find((i: any) => i.$.id == id);
+      return new Image(item, indexNode.locate(item.$.href));
     },
 
     chapters: function () {
       const refs = manifestData.package.spine[0].itemref;
       return refs.map(function (ref: any) {
         const id = ref.$.idref;
-        return manifest1.chapterById(id);
+        const item = manifest_.item.find((i: any) => i.$.id == id);
+        return new Chapter(indexNode.locate(item.$.href), manifest1);
       });
     },
     /**
