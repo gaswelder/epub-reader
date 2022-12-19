@@ -21,7 +21,8 @@ export const load = async (src: any) => {
 
   const manifestData = await z.locate(indexPath).xml();
   // The manifest is the list of all files.
-  const manifest1 = new Manifest(indexNode, manifestData.package.manifest[0]);
+  const manifest_ = manifestData.package.manifest[0];
+  const manifest1 = new Manifest(indexNode, manifest_);
 
   return {
     cover: function () {
@@ -45,7 +46,29 @@ export const load = async (src: any) => {
      * Returns the book's table of contents
      * as a list of navigation pointer objects.
      */
-    toc: manifest1.ncx().list,
+    toc: async () => {
+      const item = manifest_.item.find(
+        (i: any) => i.$["media-type"] == "application/x-dtbncx+xml"
+      );
+      if (!item) {
+        throw new Error("couldn't find NCX item in the manifest");
+      }
+      const ncxNode = indexNode.locate(item.$.href);
+      function parsePoints(root: any) {
+        return root.map(function (p: any) {
+          return {
+            title: () => p.navLabel[0].text[0],
+            children: () => p.navPoint ? parsePoints(p.navPoint) : [],
+            /**
+             * Returns the target chapter's archive path.
+             */
+            path: () => ncxNode.locate(p.content[0].$.src).path(),
+          };
+        });
+      }
+      const tocData = await ncxNode.xml();
+      return parsePoints(ns(tocData.ncx.navMap[0]).navPoint);
+    },
 
     /**
      * Returns the book's title.
@@ -83,4 +106,18 @@ function getString(node: any) {
   } else {
     return node;
   }
+}
+
+function ns(data: any): any {
+  if (typeof data != "object") {
+    return data;
+  }
+  return new Proxy(data, {
+    get(t, k) {
+      if (typeof k != "string") {
+        return t[k];
+      }
+      return ns(t[k] || t["ncx:" + k]);
+    },
+  });
 }

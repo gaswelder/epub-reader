@@ -2,101 +2,42 @@ const xml = require("./xml");
 const xmldoc = require("xmldoc");
 const toHTML = require("./html");
 
-module.exports = Manifest
+module.exports = Manifest;
 
-function Manifest(node, manifest_) {
+function Manifest(indexNode, manifest_) {
   function findItem(condition) {
     return manifest_.item.find(condition);
   }
-
-  this.ncx = function () {
-    const item = findItem(
-      (i) => i.$["media-type"] == "application/x-dtbncx+xml"
-    );
-    if (!item) {
-      throw new Error("couldn't find NCX item in the manifest");
-    }
-    return new Ncx(node.locate(item.$.href));
-  };
 
   this.image = function (path) {
     const item = findItem((i) => fullpath(i.$.href) == path);
     if (!item) {
       throw new Error("couldn't find image " + path);
     }
-    return new Image(item, node.locate(item.$.href));
+    return new Image(item, indexNode.locate(item.$.href));
   };
 
   this.imageById = function (id) {
     const item = manifest_.item.find((i) => i.$.id == id);
-    return new Image(item, node.locate(item.$.href));
+    return new Image(item, indexNode.locate(item.$.href));
   };
 
   const _this = this;
 
   this.chapterById = function (id) {
     const item = manifest_.item.find((i) => i.$.id == id);
-    return new Chapter(node.locate(item.$.href), _this);
+    return new Chapter(indexNode.locate(item.$.href), _this);
   };
 
   this.stylesheets = function () {
     return manifest_.item
       .filter((i) => i.$["media-type"] == "text/css")
-      .map((i) => node.locate(i.$.href));
+      .map((i) => indexNode.locate(i.$.href));
   };
 
   function fullpath(p) {
-    return node.locate(p).path();
+    return indexNode.locate(p).path();
   }
-}
-
-const xml2js = require("xml2js");
-
-function Ncx(zipNode) {
-  this.list = async function () {
-    const tocData = await parseXML(await zipNode.data("string"));
-    return parsePoints(ns(tocData.ncx.navMap[0]).navPoint);
-  };
-
-  function parsePoints(root) {
-    return root.map(function (p) {
-      const title = p.navLabel[0].text[0];
-      const src = p.content[0].$.src;
-      const children = p.navPoint ? parsePoints(p.navPoint) : [];
-
-      return {
-        title: () => title,
-        children: () => children,
-        /**
-         * Returns the target chapter's archive path.
-         */
-        path: () => zipNode.locate(src).path(),
-      };
-    });
-  }
-}
-
-function ns(data) {
-  if (typeof data != "object") {
-    return data;
-  }
-  return new Proxy(data, {
-    get(t, k) {
-      if (typeof k != "string") {
-        return t[k];
-      }
-      return ns(t[k] || t["ncx:" + k]);
-    },
-  });
-}
-
-function parseXML(str, options = {}) {
-  return new Promise(function (ok) {
-    xml2js.parseString(str, options, function (err, data) {
-      if (err) throw err;
-      ok(data);
-    });
-  });
 }
 
 function Image(manifestItem, zipNode) {
