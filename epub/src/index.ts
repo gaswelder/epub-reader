@@ -1,5 +1,4 @@
 import JSZip from "jszip";
-import * as xml2js from "xml2js";
 import Manifest from "./opf";
 import { Z, ZipNode } from "./ZipNode";
 
@@ -9,7 +8,19 @@ import { Z, ZipNode } from "./ZipNode";
  */
 export const load = async (src: any) => {
   const zip = await new JSZip().loadAsync(src);
-  const manifest = await getManifest(zip);
+  const z = Z(zip);
+  const containerData = await z.locate("META-INF/container.xml").xml();
+  const rootFile = containerData.container.rootfiles[0].rootfile[0];
+  if (rootFile.$["media-type"] != "application/oebps-package+xml") {
+    throw new Error(
+      "Expected 'application/oebps-package+xml, got " + rootFile.$["media-type"]
+    );
+  }
+  const indexPath = rootFile.$["full-path"];
+  const indexNode = ZipNode(zip, indexPath);
+
+  const manifestData = await z.locate(indexPath).xml();
+  const manifest = new Manifest(indexNode, manifestData);
   const ncx = manifest.ncx();
   return {
     cover: manifest.cover,
@@ -45,22 +56,3 @@ export const load = async (src: any) => {
     },
   };
 };
-
-/**
- * Reads the given zip and returns a manifest object.
- */
-async function getManifest(zip: JSZip) {
-  const z = Z(zip);
-  const containerData = await z.locate("META-INF/container.xml").xml();
-  const rootFile = containerData.container.rootfiles[0].rootfile[0];
-  if (rootFile.$["media-type"] != "application/oebps-package+xml") {
-    throw new Error(
-      "Expected 'application/oebps-package+xml, got " + rootFile.$["media-type"]
-    );
-  }
-  const indexPath = rootFile.$["full-path"];
-  const indexNode = ZipNode(zip, indexPath);
-
-  const manifestData = await z.locate(indexPath).xml();
-  return new Manifest(indexNode, manifestData);
-}
