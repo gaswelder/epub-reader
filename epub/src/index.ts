@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import * as xml2js from "xml2js";
 import Manifest from "./opf";
-import { ZipNode } from "./ZipNode";
+import { Z, ZipNode } from "./ZipNode";
 
 /**
  * Reads the given source and returns a book object.
@@ -50,13 +50,8 @@ export const load = async (src: any) => {
  * Reads the given zip and returns a manifest object.
  */
 async function getManifest(zip: JSZip) {
-  const containerMetaFile = zip.file("META-INF/container.xml");
-  if (!containerMetaFile) {
-    throw new Error(`container.xml not fount`);
-  }
-  const containerData = await xml2js.parseStringPromise(
-    await containerMetaFile.async("string")
-  );
+  const z = Z(zip);
+  const containerData = await z.locate("META-INF/container.xml").xml();
   const rootFile = containerData.container.rootfiles[0].rootfile[0];
   if (rootFile.$["media-type"] != "application/oebps-package+xml") {
     throw new Error(
@@ -65,12 +60,7 @@ async function getManifest(zip: JSZip) {
   }
   const indexPath = rootFile.$["full-path"];
   const indexNode = ZipNode(zip, indexPath);
-  const file = zip.file(indexPath);
-  if (!file) {
-    throw new Error(`file "${indexPath}" not found`);
-  }
-  const manifestData = await xml2js.parseStringPromise(
-    await file.async("string")
-  );
+
+  const manifestData = await z.locate(indexPath).xml();
   return new Manifest(indexNode, manifestData);
 }
