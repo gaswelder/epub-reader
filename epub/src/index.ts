@@ -1,10 +1,8 @@
 import JSZip from "jszip";
+import xmldoc from "xmldoc";
+import toHTML from "./html";
+import xml from "./xml";
 import { Z, ZipNode } from "./ZipNode";
-const xml = require("./xml");
-const xmldoc = require("xmldoc");
-const toHTML = require("./html");
-
-const isImage = (ch: any) => ch.name == "img" || ch.name == "image";
 
 /**
  * Reads the given source and returns a book object.
@@ -23,9 +21,38 @@ export const load = async (src: any) => {
   const indexPath = rootFile.$["full-path"];
   const indexNode = ZipNode(zip, indexPath);
 
-  const manifestData = await z.locate(indexPath).xml();
+  const manifestData = (await z.locate(indexPath).xml()) as {
+    package: {
+      spine: {
+        itemref: {
+          $: {
+            idref: string;
+          };
+        }[];
+      }[];
+      manifest: {
+        item: {
+          $: {
+            id: string;
+            href: string;
+            ["media-type"]: string;
+          };
+        }[];
+      }[];
+      metadata: {
+        meta: {
+          $: {
+            content: unknown;
+            name: unknown;
+          };
+        }[];
+        ["dc:title"]: unknown[];
+        ["dc:language"]: unknown[];
+      }[];
+    };
+  };
   // The manifest is the list of all files.
-  const manifest_ = manifestData.package.manifest[0];
+  const manifestItem = manifestData.package.manifest[0];
 
   const metadata = manifestData.package.metadata[0];
 
@@ -34,12 +61,15 @@ export const load = async (src: any) => {
       if (!metadata.meta) {
         return null;
       }
-      const meta = metadata.meta.find((m: any) => m.$.name == "cover");
-      if (!meta) {
+      const metaItem = metadata.meta.find((m) => m.$.name == "cover");
+      if (!metaItem) {
         return null;
       }
-      const id = meta.$.content;
-      const item = manifest_.item.find((i: any) => i.$.id == id);
+      const id = metaItem.$.content;
+      const item = manifestItem.item.find((i) => i.$.id == id);
+      if (!item) {
+        throw new Error(`couldn't find item "${id}"`);
+      }
       const imgNode = indexNode.locate(item.$.href);
       return {
         type: item.$["media-type"],
@@ -49,20 +79,23 @@ export const load = async (src: any) => {
     },
 
     chapters: function () {
-      const refs = manifestData.package.spine[0].itemref;
-      return refs.map(function (ref: any) {
-        const id = ref.$.idref;
-        const item = manifest_.item.find((i: any) => i.$.id == id);
-        const href = item.$.href;
-        const zipNode = indexNode.locate(href);
+      return manifestData.package.spine[0].itemref.map(function (ref) {
+        const item = manifestItem.item.find((i) => i.$.id == ref.$.idref);
+        if (!item) {
+          throw new Error(`couldn't find item "${ref.$.idref}"`);
+        }
+        const zipNode = indexNode.locate(item.$.href);
 
         /**
          * Returns contents of the chapter as a list of elements.
          */
         async function read() {
           const str = await zipNode.data("string");
-          const doc = new xmldoc.XmlDocument(str);
-          for (const image of xml.find(doc, isImage)) {
+          const doc = new xmldoc.XmlDocument(str.toString());
+          for (const image of xml.find(
+            doc,
+            (ch: any) => ch.name == "img" || ch.name == "image"
+          )) {
             let hrefAttr = "src";
             if (image.name == "image") {
               hrefAttr = "xlink:href";
@@ -70,8 +103,8 @@ export const load = async (src: any) => {
             const href = image.attr[hrefAttr];
             const imageNode = zipNode.locate(href);
             const imagePath = imageNode.path();
-            const item = manifest_.item.find(
-              (i: any) => indexNode.locate(i.$.href).path() == imagePath
+            const item = manifestItem.item.find(
+              (i) => indexNode.locate(i.$.href).path() == imagePath
             );
             if (!item) {
               throw new Error("couldn't find image " + imagePath);
@@ -84,6 +117,9 @@ export const load = async (src: any) => {
           }
           const elements = [];
           const body = doc.childNamed("body");
+          if (!body) {
+            throw new Error(`body element missing in the document`);
+          }
           elements.push(...body.children);
           return elements;
         }
@@ -112,15 +148,15 @@ export const load = async (src: any) => {
      * as a list of navigation pointer objects.
      */
     toc: async () => {
-      const item = manifest_.item.find(
-        (i: any) => i.$["media-type"] == "application/x-dtbncx+xml"
+      const item = manifestItem.item.find(
+        (i) => i.$["media-type"] == "application/x-dtbncx+xml"
       );
       if (!item) {
         throw new Error("couldn't find NCX item in the manifest");
       }
       const ncxNode = indexNode.locate(item.$.href);
-      function parsePoints(root: any) {
-        return root.map(function (p: any) {
+      function parsePoints(root: navpoint[]) {
+        return root.map(function (p) {
           return {
             title: () => p.navLabel[0].text[0],
             children: () => (p.navPoint ? parsePoints(p.navPoint) : []),
@@ -131,7 +167,18 @@ export const load = async (src: any) => {
           };
         });
       }
-      const tocData = await ncxNode.xml();
+      type navpoint = {
+        navPoint: navpoint[];
+        navLabel: { text: unknown[] }[];
+        content: { $: { src: string } }[];
+      };
+      const tocData = (await ncxNode.xml()) as {
+        ncx: {
+          navMap: {
+            navPoint: navpoint[];
+          }[];
+        };
+      };
       return parsePoints(ns(tocData.ncx.navMap[0]).navPoint);
     },
 
@@ -150,9 +197,9 @@ export const load = async (src: any) => {
     },
 
     stylesheet: async function () {
-      const nodes = manifest_.item
-        .filter((i: any) => i.$["media-type"] == "text/css")
-        .map((i: any) => indexNode.locate(i.$.href));
+      const nodes = manifestItem.item
+        .filter((i) => i.$["media-type"] == "text/css")
+        .map((i) => indexNode.locate(i.$.href));
       let css = "";
       for (const node of nodes) {
         css += await node.data("string");
@@ -163,12 +210,14 @@ export const load = async (src: any) => {
   };
 };
 
-function getString(node: any) {
-  if (typeof node == "object") {
-    return node._;
-  } else {
+function getString(node: unknown) {
+  if (typeof node == "string") {
     return node;
   }
+  if (typeof node == "object" && node !== null && "_" in node) {
+    return node._;
+  }
+  throw new Error(`couldn't get string from node "${JSON.stringify(node)}"`);
 }
 
 function ns(data: any): any {
