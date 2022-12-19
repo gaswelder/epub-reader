@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import Manifest from "./opf";
+import { Manifest } from "./opf";
 import { Z, ZipNode } from "./ZipNode";
 
 /**

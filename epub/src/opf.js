@@ -2,8 +2,6 @@ const xml = require("./xml");
 const xmldoc = require("xmldoc");
 const toHTML = require("./html");
 
-module.exports = Manifest;
-
 function Manifest(indexNode, manifest_) {
   function findItem(condition) {
     return manifest_.item.find(condition);
@@ -100,3 +98,5 @@ async function embedImages(doc, zipNode, manifest) {
 function dataURI(data, type) {
   return `data:${type};base64,${data}`;
 }
+
+module.exports = { Manifest }
