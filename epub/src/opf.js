@@ -27,7 +27,9 @@ function Image(manifestItem, zipNode) {
 
 const isImage = (ch) => ch.name == "img" || ch.name == "image";
 
-function Chapter(zipNode, manifest) {
+function Chapter(indexNode, href, manifest_) {
+  const zipNode = indexNode.locate(href);
+  const manifest = new Manifest(indexNode, manifest_);
   /**
    * Returns contents of the chapter as HTML string.
    */
@@ -86,4 +88,4 @@ function dataURI(data, type) {
   return `data:${type};base64,${data}`;
 }
 
-module.exports = { Manifest, Image, Chapter }
+module.exports = { Image, Chapter }

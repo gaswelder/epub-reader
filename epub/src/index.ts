@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { Manifest, Image, Chapter } from "./opf";
+import { Image, Chapter } from "./opf";
 import { Z, ZipNode } from "./ZipNode";
 
 /**
@@ -22,7 +22,6 @@ export const load = async (src: any) => {
   const manifestData = await z.locate(indexPath).xml();
   // The manifest is the list of all files.
   const manifest_ = manifestData.package.manifest[0];
-  const manifest1 = new Manifest(indexNode, manifest_);
 
   const metadata = manifestData.package.metadata[0];
 
@@ -45,7 +44,7 @@ export const load = async (src: any) => {
       return refs.map(function (ref: any) {
         const id = ref.$.idref;
         const item = manifest_.item.find((i: any) => i.$.id == id);
-        return new Chapter(indexNode.locate(item.$.href), manifest1);
+        return new Chapter(indexNode, item.$.href, manifest_);
       });
     },
     /**
