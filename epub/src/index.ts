@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { XmlElement, XmlNode } from "xmldoc";
 import toHTML from "./html";
 import xml from "./xml";
 import { Z, ZipNode } from "./ZipNode";
@@ -20,16 +21,6 @@ type PackageData = {
           ["media-type"]: string;
         };
       }[];
-    }[];
-    metadata: {
-      meta: {
-        $: {
-          content: unknown;
-          name: unknown;
-        };
-      }[];
-      ["dc:title"]: unknown[];
-      ["dc:language"]: unknown[];
     }[];
   };
 };
@@ -61,22 +52,21 @@ export const load = async (src: any) => {
   // The manifest is the list of all files.
   const manifestItem = packageData.package.manifest[0];
 
-  const metadata = packageData.package.metadata[0];
+  // const metadata = packageData.package.metadata[0];
   const indexNode = ZipNode(zip, indexPath);
 
   return {
     cover: function () {
-      if (!metadata.meta) {
+      const f = (n: XmlNode): n is XmlElement =>
+        n.type == "element" && n.name == "meta" && n.attr.name == "cover";
+      const coverMeta = indexDoc.childNamed("metadata")?.children.find(f);
+      if (!coverMeta) {
         return null;
       }
-      const metaItem = metadata.meta.find((m) => m.$.name == "cover");
-      if (!metaItem) {
-        return null;
-      }
-      const id = metaItem.$.content;
-      const item = manifestItem.item.find((i) => i.$.id == id);
+      const coverImageId = coverMeta.attr.content;
+      const item = manifestItem.item.find((i) => i.$.id == coverImageId);
       if (!item) {
-        throw new Error(`couldn't find item "${id}"`);
+        throw new Error(`couldn't find item "${coverImageId}"`);
       }
       const imgNode = indexNode.locate(item.$.href);
       return {
@@ -184,14 +174,14 @@ export const load = async (src: any) => {
      * Returns the book's title.
      */
     title: function () {
-      return getString(metadata["dc:title"][0]);
+      return indexDoc.descendantWithPath("metadata.dc:title")?.val;
     },
 
     /**
      * Returns the book's language.
      */
     language: function () {
-      return getString(metadata["dc:language"][0]);
+      return indexDoc.descendantWithPath("metadata.dc:language")?.val;
     },
 
     stylesheet: async function () {
