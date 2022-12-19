@@ -9,7 +9,7 @@ export default {
   },
   plugins: [
     svelte({
-      include: 'src/viewer/components/**/*.svelte',
+      include: 'src/viewer/**/*.svelte',
       css: function (css) {
         css.write('main.css');
       },

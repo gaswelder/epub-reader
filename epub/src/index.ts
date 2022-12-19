@@ -7,7 +7,7 @@ import { ZipNode } from "./ZipNode";
  * Reads the given source and returns a book object.
  * The source is whatever can be read by JSZip.
  */
-export const load = async (src) => {
+export const load = async (src: any) => {
   const zip = await new JSZip().loadAsync(src);
   const manifest = await getManifest(zip);
   const ncx = manifest.ncx();
@@ -48,15 +48,16 @@ export const load = async (src) => {
 
 /**
  * Reads the given zip and returns a manifest object.
- *
- * @param {JSZip} zip
- * @returns {Manifest}
  */
-async function getManifest(zip) {
+async function getManifest(zip: JSZip) {
   const indexPath = await rootFilePath(zip);
   const indexNode = ZipNode(zip, indexPath);
+  const file = zip.file(indexPath);
+  if (!file) {
+    throw new Error(`file "${indexPath}" not found`);
+  }
   const manifestData = await xml2js.parseStringPromise(
-    await zip.file(indexPath).async("string")
+    await file.async("string")
   );
   return new Manifest(indexNode, manifestData);
 }
@@ -64,9 +65,13 @@ async function getManifest(zip) {
 /**
  * Returns the path to the manifest file.
  */
-async function rootFilePath(zip) {
+async function rootFilePath(zip: JSZip) {
+  const file = zip.file("META-INF/container.xml");
+  if (!file) {
+    throw new Error(`container.xml not fount`);
+  }
   const containerData = await xml2js.parseStringPromise(
-    await zip.file("META-INF/container.xml").async("string")
+    await file.async("string")
   );
   const rootFile = containerData.container.rootfiles[0].rootfile[0];
   if (rootFile.$["media-type"] != "application/oebps-package+xml") {

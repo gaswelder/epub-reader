@@ -1,10 +1,7 @@
-all: epub-web
+all: epub ui
 
-epub-node:
-	node_modules/.bin/tsc --allowJs --outDir tmp/epub --esModuleInterop --incremental --tsBuildInfoFile tmp/epub/ts-build-info --target es2020 --module commonJs src/epub/index.ts
-
-epub-web: epub-node
-	node_modules/.bin/browserify tmp/epub/index.js --outfile bin/book.bin.js --standalone epub
+epub:
+	cd epub && make
 
 ui:
 	yarn rollup -c rollup.config.js
