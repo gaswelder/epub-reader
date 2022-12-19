@@ -24,13 +24,17 @@ export const load = async (src: any) => {
   const manifest_ = manifestData.package.manifest[0];
   const manifest1 = new Manifest(indexNode, manifest_);
 
+  const metadata = manifestData.package.metadata[0];
+
   return {
     cover: function () {
-      if (!manifestData.package.metadata[0].meta) return null;
-      const meta = manifestData.package.metadata[0].meta.find(
-        (m: any) => m.$.name == "cover"
-      );
-      if (!meta) return null;
+      if (!metadata.meta) {
+        return null;
+      }
+      const meta = metadata.meta.find((m: any) => m.$.name == "cover");
+      if (!meta) {
+        return null;
+      }
       const id = meta.$.content;
       return manifest1.imageById(id);
     },
@@ -58,7 +62,7 @@ export const load = async (src: any) => {
         return root.map(function (p: any) {
           return {
             title: () => p.navLabel[0].text[0],
-            children: () => p.navPoint ? parsePoints(p.navPoint) : [],
+            children: () => (p.navPoint ? parsePoints(p.navPoint) : []),
             /**
              * Returns the target chapter's archive path.
              */
@@ -74,18 +78,14 @@ export const load = async (src: any) => {
      * Returns the book's title.
      */
     title: function () {
-      const meta = manifestData.package.metadata[0];
-      if (!meta["dc:title"]) {
-        return null;
-      }
-      return getString(meta["dc:title"][0]);
+      return getString(metadata["dc:title"][0]);
     },
 
     /**
      * Returns the book's language.
      */
     language: function () {
-      return getString(manifestData.package.metadata[0]["dc:language"][0]);
+      return getString(metadata["dc:language"][0]);
     },
 
     stylesheet: async function () {
