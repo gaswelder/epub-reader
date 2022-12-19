@@ -18,6 +18,10 @@
   let justify = false;
 
   const userCss = `
+  html {
+    max-width: 900px;
+    border-right: 1px dotted gray;
+  }
   body {
     max-width: 48em;
     margin: auto;
