@@ -89,7 +89,9 @@ export const load = async (src: any) => {
     },
 
     stylesheet: async function () {
-      const nodes = manifest1.stylesheets();
+      const nodes = manifest_.item
+        .filter((i: any) => i.$["media-type"] == "text/css")
+        .map((i: any) => indexNode.locate(i.$.href));
       let css = "";
       for (const node of nodes) {
         css += await node.data("string");

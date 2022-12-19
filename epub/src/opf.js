@@ -29,12 +29,6 @@ function Manifest(indexNode, manifest_) {
     return new Chapter(indexNode.locate(item.$.href), _this);
   };
 
-  this.stylesheets = function () {
-    return manifest_.item
-      .filter((i) => i.$["media-type"] == "text/css")
-      .map((i) => indexNode.locate(i.$.href));
-  };
-
   function fullpath(p) {
     return indexNode.locate(p).path();
   }
