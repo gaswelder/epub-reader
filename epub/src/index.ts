@@ -4,6 +4,37 @@ import toHTML from "./html";
 import xml from "./xml";
 import { Z, ZipNode } from "./ZipNode";
 
+type PackageData = {
+  package: {
+    spine: {
+      itemref: {
+        $: {
+          idref: string;
+        };
+      }[];
+    }[];
+    manifest: {
+      item: {
+        $: {
+          id: string;
+          href: string;
+          ["media-type"]: string;
+        };
+      }[];
+    }[];
+    metadata: {
+      meta: {
+        $: {
+          content: unknown;
+          name: unknown;
+        };
+      }[];
+      ["dc:title"]: unknown[];
+      ["dc:language"]: unknown[];
+    }[];
+  };
+};
+
 /**
  * Reads the given source and returns a book object.
  * The source is whatever can be read by JSZip.
@@ -21,40 +52,11 @@ export const load = async (src: any) => {
   const indexPath = rootFile.$["full-path"];
   const indexNode = ZipNode(zip, indexPath);
 
-  const manifestData = (await z.locate(indexPath).xml()) as {
-    package: {
-      spine: {
-        itemref: {
-          $: {
-            idref: string;
-          };
-        }[];
-      }[];
-      manifest: {
-        item: {
-          $: {
-            id: string;
-            href: string;
-            ["media-type"]: string;
-          };
-        }[];
-      }[];
-      metadata: {
-        meta: {
-          $: {
-            content: unknown;
-            name: unknown;
-          };
-        }[];
-        ["dc:title"]: unknown[];
-        ["dc:language"]: unknown[];
-      }[];
-    };
-  };
+  const packageData = (await z.locate(indexPath).xml()) as PackageData;
   // The manifest is the list of all files.
-  const manifestItem = manifestData.package.manifest[0];
+  const manifestItem = packageData.package.manifest[0];
 
-  const metadata = manifestData.package.metadata[0];
+  const metadata = packageData.package.metadata[0];
 
   return {
     cover: function () {
@@ -79,57 +81,49 @@ export const load = async (src: any) => {
     },
 
     chapters: function () {
-      return manifestData.package.spine[0].itemref.map(function (ref) {
+      return packageData.package.spine[0].itemref.map(function (ref) {
         const item = manifestItem.item.find((i) => i.$.id == ref.$.idref);
         if (!item) {
           throw new Error(`couldn't find item "${ref.$.idref}"`);
         }
         const zipNode = indexNode.locate(item.$.href);
 
-        /**
-         * Returns contents of the chapter as a list of elements.
-         */
-        async function read() {
-          const str = await zipNode.data("string");
-          const doc = new xmldoc.XmlDocument(str.toString());
-          for (const image of xml.find(
-            doc,
-            (ch: any) => ch.name == "img" || ch.name == "image"
-          )) {
-            let hrefAttr = "src";
-            if (image.name == "image") {
-              hrefAttr = "xlink:href";
-            }
-            const href = image.attr[hrefAttr];
-            const imageNode = zipNode.locate(href);
-            const imagePath = imageNode.path();
-            const item = manifestItem.item.find(
-              (i) => indexNode.locate(i.$.href).path() == imagePath
-            );
-            if (!item) {
-              throw new Error("couldn't find image " + imagePath);
-            }
-            const imgNode = indexNode.locate(item.$.href);
-            const img64 = await imgNode.data("base64");
-            image.attr[
-              hrefAttr
-            ] = `data:${item.$["media-type"]};base64,${img64}`;
-          }
-          const elements = [];
-          const body = doc.childNamed("body");
-          if (!body) {
-            throw new Error(`body element missing in the document`);
-          }
-          elements.push(...body.children);
-          return elements;
-        }
-
-        const ch = {
+        return {
           /**
            * Returns contents of the chapter as HTML string.
            */
           html: async function () {
-            const elements = await read();
+            const str = await zipNode.data("string");
+            const doc = new xmldoc.XmlDocument(str.toString());
+            for (const image of xml.find(
+              doc,
+              (ch: any) => ch.name == "img" || ch.name == "image"
+            )) {
+              let hrefAttr = "src";
+              if (image.name == "image") {
+                hrefAttr = "xlink:href";
+              }
+              const href = image.attr[hrefAttr];
+              const imageNode = zipNode.locate(href);
+              const imagePath = imageNode.path();
+              const item = manifestItem.item.find(
+                (i) => indexNode.locate(i.$.href).path() == imagePath
+              );
+              if (!item) {
+                throw new Error("couldn't find image " + imagePath);
+              }
+              const imgNode = indexNode.locate(item.$.href);
+              const img64 = await imgNode.data("base64");
+              image.attr[
+                hrefAttr
+              ] = `data:${item.$["media-type"]};base64,${img64}`;
+            }
+            const elements = [];
+            const body = doc.childNamed("body");
+            if (!body) {
+              throw new Error(`body element missing in the document`);
+            }
+            elements.push(...body.children);
             return elements.map(toHTML).join("");
           },
 
@@ -140,7 +134,6 @@ export const load = async (src: any) => {
             return zipNode.path();
           },
         };
-        return ch;
       });
     },
     /**
