@@ -20,7 +20,7 @@ export function ZipNode(zip: JSZip, nodePath: string) {
       const targetPath = path.join(path.dirname(nodePath), href);
       return ZipNode(zip, targetPath);
     },
-    data: function (type: "string"|"nodebuffer" = "string") {
+    data: function (type: "string" | "nodebuffer" | "base64" = "string") {
       const file = zip.file(nodePath);
       if (!file) {
         throw new Error(`file "${nodePath}" not found`);
