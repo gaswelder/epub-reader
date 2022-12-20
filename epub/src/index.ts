@@ -187,16 +187,6 @@ export const load = async (src: any) => {
   };
 };
 
-function getString(node: unknown) {
-  if (typeof node == "string") {
-    return node;
-  }
-  if (typeof node == "object" && node !== null && "_" in node) {
-    return node._;
-  }
-  throw new Error(`couldn't get string from node "${JSON.stringify(node)}"`);
-}
-
 function ns(data: any): any {
   if (typeof data != "object") {
     return data;
