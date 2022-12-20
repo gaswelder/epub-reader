@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { XmlElement, XmlNode } from "xmldoc";
 import toHTML from "./html";
 import xml from "./xml";
-import { Z, ZipNode } from "./ZipNode";
+import { Z } from "./ZipNode";
 import * as path from "path";
 
 /**
@@ -51,8 +51,6 @@ export const load = async (src: any) => {
   if (!spine) {
     throw new Error(`couldn't read the spine`);
   }
-
-  const indexNode = ZipNode(zip, indexPath);
 
   return {
     cover: function () {
@@ -135,31 +133,32 @@ export const load = async (src: any) => {
       }
 
       const ncxPath = applyHref(indexPath, ncxItem.href);
-      function parsePoints(root: navpoint[]) {
+      function parsePoints(root: XmlElement[]) {
         return root.map(function (p) {
+          const text = p.childNamed("navLabel")?.childNamed("text");
+          if (!text) {
+            throw new Error(`navLabel not found`);
+          }
+          const content = p.childNamed("content");
+          if (!content) {
+            throw new Error(`content not found`);
+          }
           return {
-            title: () => p.navLabel[0].text[0],
-            children: () => (p.navPoint ? parsePoints(p.navPoint) : []),
+            title: () => text.val,
+            children: () => parsePoints(p.childrenNamed("navPoint")),
             /**
              * Returns the target chapter's archive path.
              */
-            path: () => applyHref(ncxPath, p.content[0].$.src),
+            path: () => applyHref(ncxPath, content.attr.src),
           };
         });
       }
-      type navpoint = {
-        navPoint: navpoint[];
-        navLabel: { text: unknown[] }[];
-        content: { $: { src: string } }[];
-      };
-      const tocData = (await z.locate(ncxPath).xml()) as {
-        ncx: {
-          navMap: {
-            navPoint: navpoint[];
-          }[];
-        };
-      };
-      return parsePoints(ns(tocData.ncx.navMap[0]).navPoint);
+      const tocDoc = await z.xmldoc(ncxPath);
+      const map = tocDoc.childNamed("navMap");
+      if (!map) {
+        throw new Error(`navMap missing`);
+      }
+      return parsePoints(map.childrenNamed("navPoint"));
     },
 
     /**
