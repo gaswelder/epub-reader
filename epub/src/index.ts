@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import * as path from "path";
 import xmldoc, { XmlElement, XmlNode } from "xmldoc";
-import toHTML from "./html";
+import { toHTML } from "./html";
 
 /**
  * Reads the given source and returns a book object.
