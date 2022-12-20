@@ -3,6 +3,7 @@ import { XmlElement, XmlNode } from "xmldoc";
 import toHTML from "./html";
 import xml from "./xml";
 import { Z, ZipNode } from "./ZipNode";
+import * as path from "path";
 
 /**
  * Reads the given source and returns a book object.
@@ -66,27 +67,25 @@ export const load = async (src: any) => {
       if (!item) {
         throw new Error(`couldn't find item "${coverImageId}"`);
       }
-      const imgNode = indexNode.locate(item.href);
       return {
         type: item.type,
-        b64: () => imgNode.data("base64"),
+        b64: () => z.locate(applyHref(indexPath, item.href)).data("base64"),
       };
     },
 
     chapters: function () {
-      return spine.map(function (id) {
-        const item = manifest.find((x) => x.id == id);
-        if (!item) {
-          throw new Error(`couldn't find spine item "${id}"`);
+      return spine.map(function (chapterFileId) {
+        const chapterItem = manifest.find((x) => x.id == chapterFileId);
+        if (!chapterItem) {
+          throw new Error(`couldn't find spine item "${chapterFileId}"`);
         }
-        const zipNode = indexNode.locate(item.href);
-
         return {
           /**
            * Returns contents of the chapter as HTML string.
            */
           html: async function () {
-            const doc = await zipNode.xmldoc();
+            const chapterPath = applyHref(indexPath, chapterItem.href);
+            const doc = await z.locate(chapterPath).xmldoc();
             for (const image of xml.find(
               doc,
               (ch: any) => ch.name == "img" || ch.name == "image"
@@ -95,18 +94,17 @@ export const load = async (src: any) => {
               if (image.name == "image") {
                 hrefAttr = "xlink:href";
               }
-              const href = image.attr[hrefAttr];
-              const imageNode = zipNode.locate(href);
-              const imagePath = imageNode.path();
-              const item = manifest.find(
-                (x) => indexNode.locate(x.href).path() == imagePath
+              const imagePath = applyHref(chapterPath, image.attr[hrefAttr]);
+              const imageItem = manifest.find(
+                (x) => applyHref(indexPath, x.href) == imagePath
               );
-              if (!item) {
+              if (!imageItem) {
                 throw new Error("couldn't find image " + imagePath);
               }
-              const imgNode = indexNode.locate(item.href);
-              const img64 = await imgNode.data("base64");
-              image.attr[hrefAttr] = `data:${item.type};base64,${img64}`;
+              const img64 = await z
+                .locate(applyHref(indexPath, imageItem.href))
+                .data("base64");
+              image.attr[hrefAttr] = `data:${imageItem.type};base64,${img64}`;
             }
             const elements = [];
             const body = doc.childNamed("body");
@@ -121,7 +119,7 @@ export const load = async (src: any) => {
            * Returns the chapter's archive path.
            */
           path: function () {
-            return zipNode.path();
+            return applyHref(indexPath, chapterItem.href);
           },
         };
       });
@@ -131,11 +129,14 @@ export const load = async (src: any) => {
      * as a list of navigation pointer objects.
      */
     toc: async () => {
-      const item = manifest.find((x) => x.type == "application/x-dtbncx+xml");
-      if (!item) {
+      const ncxItem = manifest.find(
+        (x) => x.type == "application/x-dtbncx+xml"
+      );
+      if (!ncxItem) {
         throw new Error("couldn't find NCX item in the manifest");
       }
-      const ncxNode = indexNode.locate(item.href);
+
+      const ncxPath = applyHref(indexPath, ncxItem.href);
       function parsePoints(root: navpoint[]) {
         return root.map(function (p) {
           return {
@@ -144,7 +145,7 @@ export const load = async (src: any) => {
             /**
              * Returns the target chapter's archive path.
              */
-            path: () => ncxNode.locate(p.content[0].$.src).path(),
+            path: () => applyHref(ncxPath, p.content[0].$.src),
           };
         });
       }
@@ -153,7 +154,7 @@ export const load = async (src: any) => {
         navLabel: { text: unknown[] }[];
         content: { $: { src: string } }[];
       };
-      const tocData = (await ncxNode.xml()) as {
+      const tocData = (await z.locate(ncxPath).xml()) as {
         ncx: {
           navMap: {
             navPoint: navpoint[];
@@ -178,12 +179,11 @@ export const load = async (src: any) => {
     },
 
     stylesheet: async function () {
-      const nodes = manifest
-        .filter((x) => x.type == "test/css")
-        .map((x) => indexNode.locate(x.href));
       let css = "";
-      for (const node of nodes) {
-        css += await node.data("string");
+      for (const cssItem of manifest.filter((x) => x.type == "test/css")) {
+        css += await z
+          .locate(applyHref(indexPath, cssItem.href))
+          .data("string");
         css += "\n";
       }
       return css;
@@ -214,3 +214,5 @@ function ns(data: any): any {
     },
   });
 }
+
+const applyHref = (p: string, href: string) => path.join(path.dirname(p), href);

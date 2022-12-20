@@ -1,5 +1,4 @@
 import JSZip from "jszip";
-import * as path from "path";
 import * as xml2js from "xml2js";
 import xmldoc from "xmldoc";
 
@@ -17,10 +16,6 @@ export function ZipNode(zip: JSZip, nodePath: string) {
     throw new Error(`${nodePath} not found`);
   }
   return {
-    locate: function (href: string) {
-      const targetPath = path.join(path.dirname(nodePath), href);
-      return ZipNode(zip, targetPath);
-    },
     data: function (type: "string" | "nodebuffer" | "base64" = "string") {
       return file.async(type);
     },
