@@ -2,7 +2,6 @@ import JSZip from "jszip";
 import * as path from "path";
 import xmldoc, { XmlElement, XmlNode } from "xmldoc";
 import toHTML from "./html";
-import xmlu from "./xml";
 
 /**
  * Reads the given source and returns a book object.
@@ -91,9 +90,9 @@ export const load = async (src: any) => {
           html: async function () {
             const chapterPath = applyHref(indexPath, chapterItem.href);
             const doc = await xml(chapterPath);
-            for (const image of xmlu.find(
+            for (const image of xmlfind(
               doc,
-              (ch: any) => ch.name == "img" || ch.name == "image"
+              (ch) => ch.name == "img" || ch.name == "image"
             )) {
               let hrefAttr = "src";
               if (image.name == "image") {
@@ -211,3 +210,15 @@ function ns(data: any): any {
 }
 
 const applyHref = (p: string, href: string) => path.join(path.dirname(p), href);
+
+function xmlfind(
+  root: XmlElement,
+  match: (n: XmlElement) => boolean
+): XmlElement[] {
+  return root.children.flatMap((child) => {
+    if (child.type != "element") {
+      return [];
+    }
+    return [...(match(child) ? [child] : []), ...xmlfind(child, match)];
+  });
+}
