@@ -1,9 +1,8 @@
 import JSZip from "jszip";
-import { XmlElement, XmlNode } from "xmldoc";
-import toHTML from "./html";
-import xml from "./xml";
-import { Z } from "./ZipNode";
 import * as path from "path";
+import xmldoc, { XmlElement, XmlNode } from "xmldoc";
+import toHTML from "./html";
+import xmlu from "./xml";
 
 /**
  * Reads the given source and returns a book object.
@@ -11,10 +10,18 @@ import * as path from "path";
  */
 export const load = async (src: any) => {
   const zip = await new JSZip().loadAsync(src);
-  const z = Z(zip);
+  const file = async (path: string, format: "string" | "base64") => {
+    const file = zip.file(path);
+    if (!file) {
+      throw new Error(`${path} not found`);
+    }
+    return file.async(format);
+  };
+  const xml = async (path: string) =>
+    new xmldoc.XmlDocument(await file(path, "string"));
 
   // Go to container.xml and find out where the index file is.
-  const containerDoc = await z.xmldoc("META-INF/container.xml");
+  const containerDoc = await xml("META-INF/container.xml");
   const rootfile = containerDoc.descendantWithPath("rootfiles.rootfile");
   if (!rootfile) {
     throw new Error(`couldn't get rootfile from container.xml`);
@@ -26,7 +33,7 @@ export const load = async (src: any) => {
     );
   }
   const indexPath = rootfile.attr["full-path"];
-  const indexDoc = await z.xmldoc(indexPath);
+  const indexDoc = await xml(indexPath);
 
   // Get the manifest - the list of all files in the package.
   const manifest = indexDoc
@@ -67,7 +74,7 @@ export const load = async (src: any) => {
       }
       return {
         type: item.type,
-        b64: () => z.b64(applyHref(indexPath, item.href)),
+        b64: () => file(applyHref(indexPath, item.href), "base64"),
       };
     },
 
@@ -83,8 +90,8 @@ export const load = async (src: any) => {
            */
           html: async function () {
             const chapterPath = applyHref(indexPath, chapterItem.href);
-            const doc = await z.xmldoc(chapterPath);
-            for (const image of xml.find(
+            const doc = await xml(chapterPath);
+            for (const image of xmlu.find(
               doc,
               (ch: any) => ch.name == "img" || ch.name == "image"
             )) {
@@ -99,7 +106,10 @@ export const load = async (src: any) => {
               if (!imageItem) {
                 throw new Error("couldn't find image " + imagePath);
               }
-              const img64 = await z.b64(applyHref(indexPath, imageItem.href));
+              const img64 = await file(
+                applyHref(indexPath, imageItem.href),
+                "base64"
+              );
               image.attr[hrefAttr] = `data:${imageItem.type};base64,${img64}`;
             }
             const elements = [];
@@ -153,7 +163,7 @@ export const load = async (src: any) => {
           };
         });
       }
-      const tocDoc = await z.xmldoc(ncxPath);
+      const tocDoc = await xml(ncxPath);
       const map = tocDoc.childNamed("navMap");
       if (!map) {
         throw new Error(`navMap missing`);
@@ -178,7 +188,7 @@ export const load = async (src: any) => {
     stylesheet: async function () {
       let css = "";
       for (const cssItem of manifest.filter((x) => x.type == "test/css")) {
-        css += await z.str(applyHref(indexPath, cssItem.href));
+        css += await file(applyHref(indexPath, cssItem.href), "string");
         css += "\n";
       }
       return css;
