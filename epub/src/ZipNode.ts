@@ -7,6 +7,28 @@ export const Z = (zip: JSZip) => {
     locate(path: string) {
       return ZipNode(zip, path);
     },
+    async xmldoc(path: string) {
+      const file = zip.file(path);
+      if (!file) {
+        throw new Error(`${path} not found`);
+      }
+      const str = await file.async("string");
+      return new xmldoc.XmlDocument(str);
+    },
+    async b64(path: string) {
+      const file = zip.file(path);
+      if (!file) {
+        throw new Error(`${path} not found`);
+      }
+      return file.async("base64");
+    },
+    async str(path: string) {
+      const file = zip.file(path);
+      if (!file) {
+        throw new Error(`${path} not found`);
+      }
+      return file.async("string");
+    },
   };
 };
 
@@ -16,18 +38,8 @@ export function ZipNode(zip: JSZip, nodePath: string) {
     throw new Error(`${nodePath} not found`);
   }
   return {
-    data: function (type: "string" | "nodebuffer" | "base64" = "string") {
-      return file.async(type);
-    },
     async xml() {
       return xml2js.parseStringPromise(await file.async("string"));
-    },
-    async xmldoc() {
-      const str = await file.async("string");
-      return new xmldoc.XmlDocument(str);
-    },
-    path: function () {
-      return nodePath;
     },
   };
 }

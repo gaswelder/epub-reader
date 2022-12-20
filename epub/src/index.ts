@@ -14,7 +14,7 @@ export const load = async (src: any) => {
   const z = Z(zip);
 
   // Go to container.xml and find out where the index file is.
-  const containerDoc = await z.locate("META-INF/container.xml").xmldoc();
+  const containerDoc = await z.xmldoc("META-INF/container.xml");
   const rootfile = containerDoc.descendantWithPath("rootfiles.rootfile");
   if (!rootfile) {
     throw new Error(`couldn't get rootfile from container.xml`);
@@ -26,7 +26,7 @@ export const load = async (src: any) => {
     );
   }
   const indexPath = rootfile.attr["full-path"];
-  const indexDoc = await z.locate(indexPath).xmldoc();
+  const indexDoc = await z.xmldoc(indexPath);
 
   // Get the manifest - the list of all files in the package.
   const manifest = indexDoc
@@ -69,7 +69,7 @@ export const load = async (src: any) => {
       }
       return {
         type: item.type,
-        b64: () => z.locate(applyHref(indexPath, item.href)).data("base64"),
+        b64: () => z.b64(applyHref(indexPath, item.href)),
       };
     },
 
@@ -85,7 +85,7 @@ export const load = async (src: any) => {
            */
           html: async function () {
             const chapterPath = applyHref(indexPath, chapterItem.href);
-            const doc = await z.locate(chapterPath).xmldoc();
+            const doc = await z.xmldoc(chapterPath);
             for (const image of xml.find(
               doc,
               (ch: any) => ch.name == "img" || ch.name == "image"
@@ -101,9 +101,7 @@ export const load = async (src: any) => {
               if (!imageItem) {
                 throw new Error("couldn't find image " + imagePath);
               }
-              const img64 = await z
-                .locate(applyHref(indexPath, imageItem.href))
-                .data("base64");
+              const img64 = await z.b64(applyHref(indexPath, imageItem.href));
               image.attr[hrefAttr] = `data:${imageItem.type};base64,${img64}`;
             }
             const elements = [];
@@ -181,9 +179,7 @@ export const load = async (src: any) => {
     stylesheet: async function () {
       let css = "";
       for (const cssItem of manifest.filter((x) => x.type == "test/css")) {
-        css += await z
-          .locate(applyHref(indexPath, cssItem.href))
-          .data("string");
+        css += await z.str(applyHref(indexPath, cssItem.href));
         css += "\n";
       }
       return css;
