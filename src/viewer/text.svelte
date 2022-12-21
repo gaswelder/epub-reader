@@ -15,7 +15,7 @@
 
   const setHtml = (html, css) => {
     if (!iframe) {
-      console.log(`content iframe is missing`);
+      // Hasn't loaded yet.
       return;
     }
     const body = iframe.contentDocument.body;
@@ -39,9 +39,13 @@
   $: selectChapter(selectedChapter);
 </script>
 
-<iframe on:load={() => {
-  setHtml(html, css);
-}} bind:this={iframe} title="Book content" />
+<iframe
+  on:load={() => {
+    setHtml(html, css);
+  }}
+  bind:this={iframe}
+  title="Book content"
+/>
 
 <style>
   iframe {
