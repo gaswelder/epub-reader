@@ -1,8 +1,6 @@
 node_modules
 *.bin.js
-samples/
-bin/
 build/
-dist/
-.cache
-tmp/
+.vscode
+public/
+samples/
