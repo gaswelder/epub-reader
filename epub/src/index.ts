@@ -187,7 +187,7 @@ export const load = async (src: any) => {
 
     stylesheet: async function () {
       let css = "";
-      for (const cssItem of manifest.filter((x) => x.type == "test/css")) {
+      for (const cssItem of manifest.filter((x) => x.type == "text/css")) {
         css += await file(applyHref(indexPath, cssItem.href), "string");
         css += "\n";
       }
