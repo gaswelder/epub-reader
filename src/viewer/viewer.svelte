@@ -47,6 +47,7 @@
 
   async function loadBook() {
     content = "";
+    document.title = "...";
     const data = input.files[0];
     if (!data) {
       return;
@@ -81,6 +82,7 @@
     }
     css = await book.stylesheet();
     content = chaptersHTML.join("");
+    document.title = book.title();
   }
 
   onMount(() => {
