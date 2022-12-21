@@ -5,16 +5,38 @@
   const dispatch = createEventDispatcher();
 </script>
 
+{#if chapters}
+  <ol>
+    {#each chapters as c}
+      <li>
+        <a
+          href="#{c.path()}"
+          on:click={(e) => {
+            dispatch("chapterclick", { chapter: c });
+          }}
+        >
+          {c.title()}
+        </a>
+        <svelte:self on:chapterclick chapters={c.children()} />
+      </li>
+    {/each}
+  </ol>
+{/if}
+
 <style>
   a {
     text-decoration: none;
     color: inherit;
   }
+  a:hover {
+    text-decoration: underline;
+    color: #ccc;
+  }
   li {
     margin: 0;
     margin-bottom: 7px;
     font-size: 14px;
-    color: #248;
+    color: #bbb;
     font-family: sans-serif;
   }
   ol {
@@ -23,20 +45,3 @@
     padding: 0;
   }
 </style>
-
-{#if chapters}
-  <ol>
-    {#each chapters as c}
-      <li>
-        <a
-          href="#{c.path()}"
-          on:click={e => {
-            dispatch('chapterclick', { chapter: c });
-          }}>
-          {c.title()}
-        </a>
-        <svelte:self on:chapterclick chapters={c.children()} />
-      </li>
-    {/each}
-  </ol>
-{/if}

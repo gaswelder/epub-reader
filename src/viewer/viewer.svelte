@@ -4,7 +4,7 @@
   import { onMount } from "svelte";
   import Toc from "./toc.svelte";
 
-  const { epub, viewer } = window;
+  const { epub } = window;
 
   let book;
   let input = null;
@@ -15,7 +15,7 @@
   let selectedChapter;
   let css = "";
   let addUserCss = true;
-  let justify = false;
+  let justify = true;
 
   const userCss = `
   html {
@@ -88,18 +88,6 @@
   });
 </script>
 
-<div class="header">
-  <span>{book ? book.title() : ""}</span>
-  <input type="file" bind:this={input} on:change={loadBook} />
-  <label>
-    <input type="checkbox" bind:checked={addUserCss} />
-    Add user CSS
-  </label>
-  <label>
-    <input type="checkbox" bind:checked={justify} />
-    Justify
-  </label>
-</div>
 <div class="t">
   <div class="toc">
     {#if book}
@@ -116,6 +104,24 @@
         <p>Error: {error}</p>
       {/await}
     {/if}
+  </div>
+  <div class="header">
+    <div>
+      <input type="file" bind:this={input} on:change={loadBook} />
+    </div>
+    <div>
+      {book ? book.title() : ""}
+    </div>
+    <div>
+      <label>
+        <input type="checkbox" bind:checked={addUserCss} />
+        Add user CSS
+      </label>
+      <label>
+        <input type="checkbox" bind:checked={justify} />
+        Justify
+      </label>
+    </div>
   </div>
   <div class="main">
     {#if loading}
@@ -140,25 +146,29 @@
 </div>
 
 <style>
-  .header {
-    flex: 0 0 auto;
-    height: 3em;
-    background-color: #eef;
-  }
   .t {
-    display: flex;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: min-content 1fr;
     position: absolute;
     left: 0;
     right: 0;
     bottom: 5px;
-    top: 50px;
+    top: 0;
   }
   .toc {
-    flex-basis: 20em;
+    grid-row: span 2;
     overflow: scroll;
-    padding-left: 20px;
-    padding-right: 20px;
-    border-right: dotted 1px gray;
+    padding: 20px;
+    background-color: #666;
+  }
+  .header {
+    padding: 10px;
+    font-family: sans-serif;
+    font-size: 12px;
+    max-width: 880px;
+    display: flex;
+    justify-content: space-between;
   }
   .main {
     flex: 1;
