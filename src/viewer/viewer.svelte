@@ -59,9 +59,11 @@
     const chaptersHTML = [];
 
     const cover = await book.cover();
-    chaptersHTML.push(
-      `<img src="data:${cover.type};base64,${await cover.b64()}" alt="cover">`
-    );
+    if (cover) {
+      chaptersHTML.push(
+        `<img src="data:${cover.type};base64,${await cover.b64()}" alt="cover">`
+      );
+    }
 
     function setProgress(i) {
       loadProgress = i / n;
