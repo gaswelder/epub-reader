@@ -23,7 +23,7 @@
     border-right: 1px dotted gray;
   }
   body {
-    max-width: 42em;
+    max-width: 38em;
     margin: auto;
   }
   p {
