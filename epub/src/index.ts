@@ -17,11 +17,11 @@ export const load = async (src: any) => {
     }
     return file.async(format);
   };
-  const xml = async (path: string) =>
+  const loadXML = async (path: string) =>
     new xmldoc.XmlDocument(await file(path, "string"));
 
   // Go to container.xml and find out where the index file is.
-  const containerDoc = await xml("META-INF/container.xml");
+  const containerDoc = await loadXML("META-INF/container.xml");
   const rootfile = containerDoc.descendantWithPath("rootfiles.rootfile");
   if (!rootfile) {
     throw new Error(`couldn't get rootfile from container.xml`);
@@ -33,7 +33,7 @@ export const load = async (src: any) => {
     );
   }
   const indexPath = rootfile.attr["full-path"];
-  const indexDoc = await xml(indexPath);
+  const indexDoc = await loadXML(indexPath);
 
   // Get the manifest - the list of all files in the package.
   const manifest = indexDoc
@@ -78,7 +78,7 @@ export const load = async (src: any) => {
       };
     },
 
-    chapters: function () {
+    chapters() {
       return spine.map(function (chapterFileId) {
         const chapterItem = manifest.find((x) => x.id == chapterFileId);
         if (!chapterItem) {
@@ -88,13 +88,15 @@ export const load = async (src: any) => {
           /**
            * Returns contents of the chapter as HTML string.
            */
-          html: async function () {
+          async html() {
+            const errors = [] as string[];
             const chapterPath = applyHref(indexPath, chapterItem.href);
-            const doc = await xml(chapterPath);
-            for (const image of xmlfind(
+            const doc = await loadXML(chapterPath);
+            const imageNodes = xmlfind(
               doc,
               (ch) => ch.name == "img" || ch.name == "image"
-            )) {
+            );
+            const inlineImage = async (image: xmldoc.XmlElement) => {
               let hrefAttr = "src";
               if (image.name == "image") {
                 hrefAttr = "xlink:href";
@@ -111,6 +113,13 @@ export const load = async (src: any) => {
                 "base64"
               );
               image.attr[hrefAttr] = `data:${imageItem.type};base64,${img64}`;
+            };
+            for (const image of imageNodes) {
+              try {
+                await inlineImage(image);
+              } catch (err: any) {
+                errors.push(err.message);
+              }
             }
             const elements = [];
             const body = doc.childNamed("body");
@@ -118,7 +127,8 @@ export const load = async (src: any) => {
               throw new Error(`body element missing in the document`);
             }
             elements.push(...body.children);
-            return elements.map(toHTML).join("");
+            const html = elements.map(toHTML).join("");
+            return { errors, html };
           },
 
           /**
@@ -163,7 +173,7 @@ export const load = async (src: any) => {
           };
         });
       }
-      const tocDoc = await xml(ncxPath);
+      const tocDoc = await loadXML(ncxPath);
       const map = tocDoc.childNamed("navMap");
       if (!map) {
         throw new Error(`navMap missing`);

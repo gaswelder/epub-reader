@@ -71,7 +71,8 @@
     for (let i = 0; i < n; i++) {
       setProgress(i);
       const c = chapters[i];
-      let html = await c.html();
+      let { html, errors } = await c.html();
+      errors.forEach(console.error);
       html = html.replace(/id="/g, `id="${c.path()}#`);
       html = `<a id="${c.path()}"></a>` + html;
       chaptersHTML.push(html);
