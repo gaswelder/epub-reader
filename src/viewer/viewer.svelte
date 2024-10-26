@@ -164,8 +164,10 @@
   .toc {
     grid-row: span 2;
     overflow: scroll;
-    padding: 20px;
-    background-color: #666;
+    background-color: #dddddf;
+    color: #333;
+    font-size: 14px;
+    padding: 4px 4px 40px;
   }
   .header {
     padding: 10px;
