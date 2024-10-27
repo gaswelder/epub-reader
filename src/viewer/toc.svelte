@@ -1,32 +1,36 @@
 <script>
+  import TocItem from "./toc-item.svelte";
   import { createEventDispatcher } from "svelte";
-  export let chapters;
+
+  export let book;
 
   const dispatch = createEventDispatcher();
 </script>
 
-{#each chapters as c}
-  <a
-    href="#{c.path()}"
-    on:click={(e) => {
-      dispatch("chapterclick", { chapter: c });
-    }}
-  >
-    {c.title()}
-  </a>
-  <svelte:self on:chapterclick chapters={c.children()} />
-{/each}
+<div class="toc">
+  {#if book}
+    {#await book.toc()}
+      Loading chapters list...
+    {:then chapters}
+      <TocItem
+        on:chapterclick={(e) => {
+          dispatch("chapterclick", e.detail);
+        }}
+        {chapters}
+      />
+    {:catch error}
+      <p>Error: {error}</p>
+    {/await}
+  {/if}
+</div>
 
 <style>
-  a {
-    font-family: sans-serif;
-    display: block;
-    text-decoration: none;
-    color: inherit;
-    padding: 6px 20px;
-    border-radius: 4px;
-  }
-  a:hover {
-    background-color: #ccc;
+  .toc {
+    grid-row: span 2;
+    overflow: scroll;
+    background-color: #dddddf;
+    color: #333;
+    font-size: 14px;
+    padding: 4px 4px 40px;
   }
 </style>

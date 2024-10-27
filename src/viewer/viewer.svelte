@@ -94,22 +94,12 @@
 </script>
 
 <div class="t">
-  <div class="toc">
-    {#if book}
-      {#await book.toc()}
-        loading toc
-      {:then chapters}
-        <Toc
-          on:chapterclick={(e) => {
-            selectedChapter = e.detail.chapter.path();
-          }}
-          {chapters}
-        />
-      {:catch error}
-        <p>Error: {error}</p>
-      {/await}
-    {/if}
-  </div>
+  <Toc
+    {book}
+    on:chapterclick={(e) => {
+      selectedChapter = e.detail.chapter.path();
+    }}
+  />
   <div class="header">
     <div>
       <input type="file" bind:this={input} on:change={loadBook} />
@@ -160,14 +150,6 @@
     right: 0;
     bottom: 5px;
     top: 0;
-  }
-  .toc {
-    grid-row: span 2;
-    overflow: scroll;
-    background-color: #dddddf;
-    color: #333;
-    font-size: 14px;
-    padding: 4px 4px 40px;
   }
   .header {
     padding: 10px;
